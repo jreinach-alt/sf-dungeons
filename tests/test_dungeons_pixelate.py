@@ -2,7 +2,7 @@
 
 runtime: ~6 s — pure numpy (import-dominated), no Blender, no ROM.
 
-The stage is ported from sf-gt (tools/dungeons/art/pixelate_actor.py header).
+The stage is ported from sf-gt (art/dungeons/actors/pixelate_actor.py header).
 Blender is not needed to pin its contract: a data frame is just three
 channels (R sun, G material id, B open sky), so these tests paint one by hand
 and assert each rule of docs/dungeons/13 §4 on the indexed output.
@@ -13,7 +13,7 @@ import sys
 import numpy as np
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools", "dungeons", "art"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "art", "dungeons", "actors"))
 import pixelate_actor as P  # noqa: E402
 
 SS, MARGIN, BOX = 4, 4, (16, 16)
@@ -100,3 +100,26 @@ def test_roles_table_is_validated(tmp_path):
                    'lo = 1\nhi = 5\nthresholds = [0.5]\nvote = 1.0\n')
     with pytest.raises(ValueError, match="need 4 thresholds"):
         P.load_family("x", bad)
+
+
+def test_smoke_verifier_accepts_a_good_frame_and_names_a_bad_one(fam):
+    # verify_smoke.py is the model spike's first check on a real Blender frame
+    # (docs/dungeons/14). Pin it on a synthetic one so the spike's first red is
+    # about Blender, never about the verifier.
+    import tomllib
+    import verify_smoke as V
+    act = tomllib.loads((V.HERE / "actions.toml").read_text())
+    cam = act["camera"]
+    ss, m = cam["supersample"], cam["margin_px"]
+    n = (cam["box"][0] + 2 * m) * ss
+    raw = np.zeros((n, n, 3), np.uint8)
+    r = lambda sx, sy, w, h, mat: raw.__setitem__(
+        (slice(sy * ss, (sy + h) * ss), slice(sx * ss, (sx + w) * ss)), (200, mat, 128))
+    r(9, 8, 6, 8, 2)        # cloak
+    r(10, 5, 4, 3, 4)       # skin
+    r(8, 16, 8, 2, 1)       # shadow
+    errs, sprite = V.verify(raw, act, fam)
+    assert errs == [] and sprite.shape == (16, 16)
+    raw[0:ss, 0:ss] = (0, 77, 0)                      # an id no material has
+    errs, _ = V.verify(raw, act, fam)
+    assert any("not exact" in e for e in errs)

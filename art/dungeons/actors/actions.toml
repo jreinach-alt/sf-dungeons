@@ -36,6 +36,9 @@ bones = [
   "weapon",                    # parent of the swing layer (render layer 2)
 ]
 anchor_bone = "root"          # projected to the sprite = the foot point (13 §5)
+anchor_px = [8, 13]           # PROVISIONAL: where the camera puts the root in the
+                              # 16x16 box. The spike measures the real foot row and
+                              # corrects this (sf-gt: anchors are measured, then published)
 
 # Each action: the frames the GAME shows (count, hold in game frames) and the
 # pose curve the script keys. Pose values are exaggerated ~1.5x over realistic:

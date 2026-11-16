@@ -114,7 +114,7 @@ def test_actions_agree_with_the_combat_spec():
     # actions.toml is read by BOTH the Blender script and the game; these are
     # the durations docs/dungeons/05 fixes. A retimed action must move both.
     import tomllib
-    p = os.path.join(os.path.dirname(__file__), "..", "tools", "dungeons", "art", "actions.toml")
+    p = os.path.join(os.path.dirname(__file__), "..", "art", "dungeons", "actors", "actions.toml")
     with open(p, "rb") as f:
         act = tomllib.load(f)["action"]
     for name, a in act.items():

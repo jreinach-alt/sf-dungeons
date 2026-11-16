@@ -1,5 +1,13 @@
 # CLAUDE.md — SuperForge
 
+> **This repo is SuperForge Dungeons** (a game) built on the SuperForge kit.
+> Every rule below applies unchanged. The game's own material:
+> [`docs/dungeons/00_README.md`](docs/dungeons/00_README.md) (specs),
+> [`docs/dungeons/HANDOFF.md`](docs/dungeons/HANDOFF.md) (state and next
+> steps), and `art/dungeons/` (the Blender pipeline: the build never runs
+> Blender). The current task is
+> [`docs/dungeons/14_model_spike.md`](docs/dungeons/14_model_spike.md).
+
 An SNES engine built around a **declarative resource allocator** that proves
 feature composition is collision-free at build time. Games are hand-written WDC
 65816 assembly (ca65/ld65 → `.sfc`) running on real SNES hardware at a hard

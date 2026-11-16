@@ -7,8 +7,8 @@
 > it and run, one milestone at a time, with every decision either made here or
 > listed as the owner's question.
 >
-> **Status:** DRAFT, 2026-11-13. Nothing in `game/` yet: the rail starts at
-> 08 M0.
+> **Status:** DRAFT, 2026-11-16. This is the `jreinach-alt/sf-dungeons` repo.
+> Nothing in `game/` yet: the rail starts at 08 M0, after the model spike (14).
 
 ## Read in this order
 
@@ -27,6 +27,8 @@
 | [11 — Art pipeline](11_art_pipeline_3d.md) | Blender prerenders → SNES, ported from SUPERFORGE GT: data-pass renders, material-vote pixelation, palette role tables, plus what is new (skinned characters, tiles) |
 | [12 — Music and sound](12_music_and_sound.md) | 80s orchestral in three colours, adaptive layers on TAD's channel mask, the synthesised orchestra, the cue sheet |
 | [13 — Character pipeline](13_character_pipeline.md) | animated figures: the rig and actions as data, the ported pixelate stage (tested without Blender), the `bpy` script to write, acceptance metrics, and where Elyum helps (references only) |
+| [14 — The model spike](14_model_spike.md) | **next:** the local, Blender-driven proof that an animated figure comes out as a 16×16 sprite that reads |
+| [HANDOFF](HANDOFF.md) | where everything is, what is verified, and what is next |
 | [research/genre_reference.md](research/genre_reference.md) | what the genre reference and its precedents do (the evidence behind 01–06) |
 | [research/kit_capabilities.md](research/kit_capabilities.md) | what this kit already proves, game by game (Proven / Near / New) |
 
@@ -39,7 +41,7 @@ because a model that runs beats prose that describes:
 python3 tools/dungeons/levelgen.py 0x1234 4          # ASCII floor + path, draws, validation
 python3 tools/dungeons/render_preview.py out.png     # floors as a picture (img/levelgen_preview.png)
 python3 tools/dungeons/loot.py                       # sample drops by floor
-python3 -m pytest tests/test_dungeons_model.py -q    # 110 checks, ~3 s
+python3 -m pytest tests/test_dungeons_model.py tests/test_dungeons_pixelate.py -q   # 120 checks, ~3 s
 ```
 
 | file | what it pins |
@@ -49,8 +51,8 @@ python3 -m pytest tests/test_dungeons_model.py -q    # 110 checks, ~3 s
 | `tools/dungeons/loot.py` | the item roller and the 4-byte record |
 | `tools/dungeons/data/templates.txt` | 13 hand-authored rooms (tier M) |
 | `tools/dungeons/data/gear.toml` | 22 bases, 21 enchants, rarity, power, drop tuning |
-| `tools/dungeons/art/actions.toml`, `roles.toml` | the hero rig, actions and palette roles, as data for Blender and the game alike |
-| `tools/dungeons/art/pixelate_actor.py` | render → sprite, ported from sf-gt (`tests/test_dungeons_pixelate.py`) |
+| `art/dungeons/actors/actions.toml`, `roles.toml` | the hero rig, actions and palette roles, as data for Blender and the game alike |
+| `art/dungeons/actors/pixelate_actor.py` | render → sprite, ported from sf-gt (`tests/test_dungeons_pixelate.py`) |
 
 **These are oracles.** The ROM tests in 08 compare WRAM and VRAM against them
 byte for byte. That is how a generated level gets a test that reads rendered

@@ -61,7 +61,7 @@
 
 ## 3. The dungeon kit (script-built models, the `carlib` pattern)
 
-`art/dungeons/kit.py` provides parametric parts, and `art/dungeons/models.py`
+`art/dungeons/actors/kit.py` provides parametric parts, and `art/dungeons/actors/models.py`
 composes them into one function per model. This is the sf-gt `car_models.py`
 pattern.
 
@@ -112,7 +112,7 @@ swings need no palette of their own.
    in BGR555.
 2. `render_actor.py` (Blender) → `build/dgn_art_work/`: supersampled
    data frames (R sun, G material, B AO) for every action × direction.
-3. `pixelate.py` → `art/dungeons/frames/<model>_<action>_<dir>.png`, indexed.
+3. `pixelate.py` → `art/dungeons/actors/frames/<model>_<action>_<dir>.png`, indexed.
    Material vote, ramp step, cleanup, outline, fit check. The vote tables
    come from sf-gt's, tuned for 16 px.
 4. `render_tiles.py` (Blender) + `pixelate_tiles.py` →

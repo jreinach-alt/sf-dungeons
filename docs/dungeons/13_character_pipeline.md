@@ -11,9 +11,9 @@
 
 | artifact | what it settles | pinned by |
 |---|---|---|
-| `tools/dungeons/art/actions.toml` | camera (35° ortho, 16 px/unit, ×8 supersample), the sf-gt light rig, the **bone list**, proportions, and every action's frame count, game-frame holds and key poses. It is data, so the Blender script and the game read the same numbers | `test_actions_agree_with_the_combat_spec` (it checks the roll is 8 f and the swing's wind-up/active is 4/4 f, as 05 specifies) |
-| `tools/dungeons/art/roles.toml` | the hero's **palette role table**: which material id becomes which palette index, ramp thresholds, vote weights | the loader refuses reserved, duplicate or mis-sized entries |
-| `tools/dungeons/art/pixelate_actor.py` | the **render → sprite stage**, ported from sf-gt and generalised to role tables. It does cover, material vote, ramp step, despeckle, outline/shadow, and fit-or-refuse, and provides two metrics: `foot_row` (anchor) and `shimmer` (boiling) | `tests/test_dungeons_pixelate.py`: 8 tests on **synthetic data frames**, with no Blender needed |
+| `art/dungeons/actors/actions.toml` | camera (35° ortho, 16 px/unit, ×8 supersample), the sf-gt light rig, the **bone list**, proportions, and every action's frame count, game-frame holds and key poses. It is data, so the Blender script and the game read the same numbers | `test_actions_agree_with_the_combat_spec` (it checks the roll is 8 f and the swing's wind-up/active is 4/4 f, as 05 specifies) |
+| `art/dungeons/actors/roles.toml` | the hero's **palette role table**: which material id becomes which palette index, ramp thresholds, vote weights | the loader refuses reserved, duplicate or mis-sized entries |
+| `art/dungeons/actors/pixelate_actor.py` | the **render → sprite stage**, ported from sf-gt and generalised to role tables. It does cover, material vote, ramp step, despeckle, outline/shadow, and fit-or-refuse, and provides two metrics: `foot_row` (anchor) and `shimmer` (boiling) | `tests/test_dungeons_pixelate.py`: 8 tests on **synthetic data frames**, with no Blender needed |
 
 Because a data frame is only three channels (sun, material id, sky), the
 whole downstream half of the pipeline is testable today, and it is tested.
@@ -33,7 +33,7 @@ frames** (§3).
   below one pixel. What reads at this size is **silhouette and exaggerated key
   poses**, and those are exactly what `actions.toml` holds.
 
-## 3. The `bpy` script to write (track A1): `art/dungeons/render_actor.py`
+## 3. The `bpy` script to write (track A1): `art/dungeons/actors/render_actor.py`
 
 The structure follows sf-gt's `render_car.py`
 (`setup_scene` / `setup_compositor` / `set_camera` / `render_to`), with these

@@ -48,3 +48,8 @@ __pycache__/
 # make determinism FALSIFY=1 plants a throwaway module copy here;
 # a crashed run must not dirty the tree.
 tests/planted_determinism_*.py
+
+# SuperForge Dungeons source art: indexed PNGs (and reference renders kept on
+# purpose) are the converters' inputs, so they are tracked like vendor/art.
+# Raw Blender data frames are scratch and live under build/dgn_art_work/.
+!art/dungeons/**/*.png
