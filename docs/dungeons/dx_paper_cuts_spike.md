@@ -130,3 +130,40 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
 - **clunky / LOW — the Bash tool's working directory drifted.** A `cd` into
   `build/dgn_art_work` inside one compound command stuck for the next call.
   Every later command now starts with `cd <repo>`.
+
+## On the console (2026-11-16)
+
+- **surprise / HIGH — "the box has no tooling" was my PATH, not the box.**
+  cc65 V2.19 is built from source at `~/toolchains/src/cc65/bin` and the
+  pytest venv is `~/SuperForge/.venv`. Neither is on a non-interactive
+  shell's PATH: `~/.bashrc` returns early for those, and nothing else sets
+  it. So `tools/setup.sh` fell through to `sudo apt-get install cc65`, failed
+  without a terminal, and the first `make bare-check` went RED with no ROM
+  built. I reported that as missing tooling, and the owner rightly pushed
+  back, because the SuperForge GT work builds on this box. *Fix:* a
+  SessionStart hook in the git-ignored `.claude/settings.local.json` now
+  prepends both directories via `$CLAUDE_ENV_FILE`. Search the disk
+  (`find / -xdev -name ca65`) before claiming a tool is absent.
+- **surprise / MEDIUM — import order segfaults the test collection.**
+  `vendor/mesen_runner.py` dlopens MesenCore.so at import, and its own comment
+  says it must do so before numpy's bundled libraries load. A test module
+  that imports numpy or Pillow before `machine` dies with a SIGSEGV inside
+  `ctypes`, during collection, with no test named. A scratch script that
+  happened to import `machine` first worked, which made it look like a box
+  problem. *Fix:* `test_dgn_hero.py` imports `machine` first, with the
+  reason. A lint for this ordering would have saved the detour.
+- **easy / LOW — the rail gates teach as AGENTS.md promises.**
+  `make rail-registered` named nine missing sites, then the tenth (the
+  freshness-guard dict) once the others were in. `make register` named the
+  two §3.1 lines. Each refusal said exactly where and why.
+- **surprise / LOW — `tick-check` reads "frame" and "clock" as video
+  frames.** It flagged the animation-frame indices (`idle_i`, `walk_i`) and
+  the converter's CHR band size. Each got a reasoned `TICK: ok` override;
+  the genuinely frame-coupled words (the hold countdowns) already had one.
+- **easy / LOW — the screenshot geometry is already written down.**
+  `tests/frame_geometry.py`: Mesen's PNG is 256×239 with picture row 0 at PNG
+  row 7, so an OBJ at OAM Y draws from PNG row 7 + Y. The pixel-exact crop
+  test holds with exactly that mapping.
+- **easy / LOW — Pillow merges identical consecutive GIF frames**, summing
+  their delays, so the lineup close-up's 96 captures save as 42 frames at
+  the same real-time length.

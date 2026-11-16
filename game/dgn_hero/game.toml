@@ -1,0 +1,17 @@
+# dgn_hero — SuperForge Dungeons' model spike, on the console.
+#
+# docs/dungeons/14's last step: the wanderer, script-built and rendered in
+# Blender, pixelated to committed indexed strips, converted to OBJ CHR and
+# animated by the ROM on actions.toml's holds. One scene, OBJ only, over a
+# floor-coloured backdrop. It is NOT game/dungeons (08 M0): no title, no
+# generator, no input. It is the 11 §7 vertical slice's first half.
+#
+# `fade` is in globals because scene_mgr commits INIDISP from fade's shadow in
+# the NMI; `region` + `tick_scale` make the walker's ground speed one speed on
+# both machines (08 M0: compose them from day one).
+globals = ["scene_mgr", "input", "fade", "oam_sprites", "dgnh_rom",
+           "region", "tick_scale"]
+
+[[scene]]
+id = "show"
+features = ["backdrop", "dgnh_obj"]

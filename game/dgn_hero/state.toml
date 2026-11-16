@@ -1,0 +1,21 @@
+# dgn_hero state: two animation clocks, the walker, and the timebase pair.
+# All scene-scoped @dp words; written in enter before any read (rule 5).
+
+[scene.show]
+idle_i = "u16@dp"        # idle clock: frame within the action (0..IDLE_N-1)
+                         # TICK: ok — an ANIMATION-frame index, stepped when a
+                         # hold expires; the frame-coupled word is idle_cnt
+idle_cnt = "u16@dp"      # game frames left on that frame's hold.
+                         # TICK: ok — actions.toml holds ARE game frames at
+                         # 60 Hz (class-B countdowns, docs/dungeons/02 §7)
+walk_i = "u16@dp"        # walk clock: frame within the action (0..WALK_N-1)
+                         # TICK: ok — an animation-frame index, as idle_i
+walk_cnt = "u16@dp"      # TICK: ok — as idle_cnt
+wx = "u16@dp"            # the walker's foot x, screen px, signed (wraps
+                         # through -16 so it re-enters from the left)
+tmp = "u16@dp"           # the placement loop's scratch (frame / x)
+                         # TICK: ok — holds an animation-frame / CHR index, no time
+ts_acc = "u16@dp"        # tick_scale's carried fraction (8.8).
+                         # TICK: ok — this word removes a frame coupling
+ts_step = "u16@dp"       # this frame's whole-px step, published once.
+                         # TICK: ok — the scaler's output

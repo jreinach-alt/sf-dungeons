@@ -193,3 +193,40 @@ All 7 roles are covered, and every ramp step is used.
    - **The lantern swaps hips on the HFLIP.** The hero is asymmetric (a
      lantern on the right hip, a satchel on the left). This is accepted like
      the flipped sun, and noted for the owner.
+
+### 6.1 On the console (2026-11-16)
+
+The frames the spike committed now render and animate in Mesen2, from a ROM
+built the way every rail here is built:
+
+- `game/dgn_hero` + `engine/features/dgnh_obj` (the actors) +
+  `engine/features/dgnh_rom` (the blobs), registered at all ten rail sites and
+  in docs/09.
+- `tools/gen_dgn_hero_assets.py` converts the committed strips (never
+  Blender's frames) into 96 OBJ tiles (18 resident 16×16 frames), the P1/P2
+  palettes, and a generated `.inc` of frame indices, holds and the anchor.
+- **On screen:** the walk in four facings in P1 (left is the hardware HFLIP of
+  right), the idle in four facings in P2, and a walker crossing the screen at
+  the walk's ground speed of 1.5 px a frame, wrapping through x = −16.
+
+`tests/test_dgn_hero.py` (7 tests, lockstep `Machine`, about 12 s) reads only
+rendered output:
+
+- OBJ VRAM is byte-equal to the blob, and it decodes back to the committed
+  PNG pixels independently of the converter.
+- CGRAM holds P1 and P2, which differ in exactly entries 1–7: 11 §6's
+  palette-swap rule.
+- OAM steps the walk 0→1→2→3 holding 8 frames each, and the idle 30/30, as
+  `actions.toml` says.
+- **The screen is the strips.** Each lineup actor's 16×16 crop of the
+  screenshot maps pixel for pixel onto its strip frame (mirrored for the left
+  facing), placed at the measured anchor (8, 13).
+- The walker moves 96 px in 64 frames, and re-enters from the left with X9 set.
+
+Two planted defects, a dropped HFLIP and a walk hold one frame long, each
+moved the ROM's md5 and turned the named test red; the tree restored to the
+identical md5.
+
+**Footage:** `tools/dgn_hero_footage.py OUT.gif` records the ROM in lockstep,
+one emulated frame per step and every second frame kept, at real speed.
+`--crop 32,66,192,82 --scale 4` gives the lineup close-up.

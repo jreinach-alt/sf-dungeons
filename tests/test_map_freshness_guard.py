@@ -322,6 +322,7 @@ def test_the_tree_agrees_with_the_rule():
         # ("sprite_game") and in _SUBDIR_MAP ("sprg"), added in the same
         # commit as this entry per the pairing rule above.
         "test_sprite_game.py": ["build/sprg/symbol_map.json"],
+        "test_dgn_hero.py": ["build/dgnh/symbol_map.json"],
         # Same family (stomper), same shape: its map IS in
         # conftest.MAPS ("stomper") and in _SUBDIR_MAP ("st"); registering it
         # moves the rail from "sites 5+6+9 not required" to demanded in

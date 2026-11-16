@@ -8,7 +8,8 @@
 > listed as the owner's question.
 >
 > **Status:** DRAFT, 2026-11-16. This is the `jreinach-alt/sf-dungeons` repo.
-> Nothing in `game/` yet: the rail starts at 08 M0, after the model spike (14).
+> In `game/`: only `game/dgn_hero`, the model spike's on-console proof (14 §6.1).
+> The game's own rail, `game/dungeons`, starts at 08 M0.
 
 ## Read in this order
 

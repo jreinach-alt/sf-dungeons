@@ -26,7 +26,12 @@ follows the shape of sf-gt's `docs/fgt/HANDOFF.md`.
   metrics pass, with drift 0, and they are recalibrated on the measured
   values. `build_all.sh` has the render, pixelate and sheets stages.
   `roll` / `hurt` / `downed` / `swing` are not yet tuned.
-- **ROM:** nothing yet. `game/dungeons` does not exist, and 08 M0 creates it.
+- **ROM:** `game/dgn_hero` (2026-11-16) is the spike's on-console proof: the
+  committed wanderer frames as resident 16×16 OBJs, animated on
+  `actions.toml`'s holds, with the P1/P2 palettes (14 §6.1,
+  `tests/test_dgn_hero.py`). It is not the game: `game/dungeons` does not
+  exist yet, and 08 M0 creates it. `tools/gen_dgn_hero_assets.py` is the
+  first slice of 11 §5 stage 6 that M3's converter grows from.
 
 ## 3. Next, in order
 
