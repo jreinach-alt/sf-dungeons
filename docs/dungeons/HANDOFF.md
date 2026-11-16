@@ -19,15 +19,22 @@ follows the shape of sf-gt's `docs/fgt/HANDOFF.md`.
   Q10).
 - **Models:** the level generator, PRNG and loot roller are done and pinned
   (111 checks, incl. the template linter).
-- **Art:** the downstream half is done and tested (pixelate, roles, actions
-  data). The upstream half (Blender) is ported but **never run**.
+- **Art:** the model spike ran (2026-11-15) and its verdict is **GO, with
+  adjustments** (14 §6). The wanderer's `idle` + `walk` × 3 directions are
+  rendered, rigged and keyed by `art/dungeons/actors/render_actor.py`, and
+  committed as indexed strips in `art/dungeons/actors/frames/`. All of 13 §4's
+  metrics pass, with drift 0, and they are recalibrated on the measured
+  values. `build_all.sh` has the render, pixelate and sheets stages.
+  `roll` / `hurt` / `downed` / `swing` are not yet tuned.
 - **ROM:** nothing yet. `game/dungeons` does not exist, and 08 M0 creates it.
 
 ## 3. Next, in order
 
-1. **The model spike: `docs/dungeons/14_model_spike.md`.** Run locally, with
-   Blender.
-2. Fold the spike's verdict into 11 and 13.
+1. ~~The model spike~~: done; see 14 §6 and `dx_paper_cuts_spike.md`.
+2. Fold the spike's verdict into 11. 13 already carries it: the §3 as-built
+   notes and the §4 calibrated metrics. Then tune `roll` / `hurt` / `downed`
+   (per-direction tables; `downed` facing down is refused today) and write
+   `gen_palettes.py` (P2's face contrast, 14 §6).
 3. 08 M0 → M1 → M2 (scaffold, `rng`, generator + `tiles16`), alongside art
    track A1 continuing from the spike.
 

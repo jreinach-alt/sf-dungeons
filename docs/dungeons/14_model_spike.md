@@ -102,3 +102,94 @@ Answer each question with evidence: frame images, the metric table, timings.
    extrapolated? 13 §3 implies about 33 hero frames plus swings × 5 bases.
 5. **Go / adjust / no-go** for script-built animated figures, and if
    "adjust", what changes in 11 / 13.
+
+## 6. Result (2026-11-15): **GO, with adjustments**
+
+Run on Blender 4.2.3 LTS, headless, on an 8-core box. Branch
+`dungeons/model-spike`. Everything below is reproduced by
+`art/dungeons/build_all.sh` (render → pixelate → sheets, 3.4 s) and pinned
+without Blender by `tests/test_dungeons_frames.py`. The friction is in
+[`dx_paper_cuts_spike.md`](dx_paper_cuts_spike.md).
+
+**Evidence:** [`art/dungeons/actors/sheet_wanderer.png`](../../art/dungeons/actors/sheet_wanderer.png)
+shows all 18 frames at ×8, in grey roles and in P1/P2 preview tones. The
+numbers are in `metrics.json` and `anchors.json` beside it, and the
+thresholds are in 13 §4.
+
+| action | dir | foot rows | drift | root agree | shimmer | walk frame px | walk leg px |
+|---|---|---|---|---|---|---|---|
+| idle | right | [13, 13] | 0 | 0 | 23 | - | - |
+| idle | up | [13, 13] | 0 | 0 | 11 | - | - |
+| idle | down | [13, 13] | 0 | 0 | 24 | - | - |
+| walk | right | [13, 13, 13, 13] | 0 | 0 | - | [49, 47, 47, 50] | [17, 19, 19, 18] |
+| walk | up | [13, 13, 13, 13] | 0 | 0 | - | [28, 29, 30, 29] | [5, 6, 6, 5] |
+| walk | down | [13, 13, 13, 13] | 0 | 0 | - | [54, 54, 47, 52] | [13, 14, 9, 15] |
+
+All 7 roles are covered, and every ramp step is used.
+
+1. **Does the walk read at 16 px?** It reads in the right and down views:
+   - **Right:** the leading leg shows through the open cloak front, and the
+     hem trails a frame behind the body.
+   - **Down:** blue legs against the brown tunic, a boot lifted on each
+     passing frame, and a 1 px sway.
+   - **Up:** it reads weakest. From behind the cloak hides the legs, and the
+     walk reads only by the sway and the hem; 28–30 px change per frame,
+     and only 5–6 of it in the leg rows.
+
+   The side view needed the cloak opened and trailing hard: a closed bell
+   at 35° hides the stride.
+2. **Do the feet hold still?** Yes. The drift is 0 in all six strips, the
+   foot row is 13 everywhere, and it equals the projected root row.
+   `anchor_px = [8, 13]` is now measured, not provisional. It took
+   per-direction key tables, because a full stride along the depth axis
+   moved the foot row by 1.
+3. **Does the cloak skin cleanly?** Yes, with scripted height weights on a
+   `spine → hips → cloak.1 → cloak.2` chain. It deforms through 22° of trail
+   with no tearing, in the sprites and in 320 px colour renders
+   (`render_actor.py --inspect`). **No rigid-segment fallback is needed.**
+   The limbs are rigid parts by design, which at 16 px is invisible.
+4. **Render cost:**
+   - 0.079–0.100 s a frame (mean 0.086 s) at 2 threads, about 0.05 s at 6
+   - 1.4 s wall for an 18-frame Blender process, including startup and
+     building the model
+
+   The roster 13 §3 implies is 33 hero frames (11 per direction) plus
+   45 swing frames (3 × 3 directions × 5 bases), 78 in all. That is about
+   7 s of rendering, about 15 s of wall per process including startup.
+   Enemies at the same size cost the same per frame. Rendering is not a
+   constraint, and the spike's cost was iteration by eye. Output is
+   deterministic: 2 vs 6 threads gave pixel-identical raw frames and
+   byte-identical strips.
+5. **Verdict: GO** for script-built, rigged, keyed figures. **Adjust** 11
+   and 13 as follows (13 §3/§4 already carry the as-built notes and the
+   calibrated metrics; 11 is the next step):
+   - **Directions are drawn, not only rotated.** `[action.<a>.dir.<d>]`
+     tables override channels per direction. Any stride, lunge or roll along
+     the depth axis moves the foot row at 9.2 px/u. 11 §2 should say so
+     beside "yaw at 0/90/180".
+   - **Skinning is scripted and only for cloth.** Rigid parts are bound to
+     bones, and only the cloak is skinned, with code-defined weights.
+     Bone-heat "automatic weights" (13 §3 step 2) are dropped.
+   - **Cloth must clear the legs at 35°.** The hem should sit at ≥ 0.19 u,
+     with an open front and a hard trail. 11 §3's "hooded cloak" entry
+     should carry this.
+   - **The walk-legibility metric is per direction**, and the back view has
+     no leg-row floor (13 §4 explains why a change count can reward a
+     defect).
+   - **The rest of the action set is untuned.** A probe render (not
+     committed) showed:
+     - `roll` keyed on `spine.pitch` pivots at the waist and is a blob in
+       up/down. It wants `hips.pitch` (the whole body) and per-direction
+       tables.
+     - `downed` facing down falls toward the camera, and `pixelate` refuses
+       it at 4 px out of the box.
+     - `hurt` fits.
+
+     These are data edits for the next art session.
+   - **P2 needs contrast at the face.** In the preview, P2's amber cloak
+     ramp swallows the skin ramp under the hood. `gen_palettes.py`
+     (11 §5 stage 1) must keep the hood's lit step and the skin's lit step
+     apart.
+   - **The lantern swaps hips on the HFLIP.** The hero is asymmetric (a
+     lantern on the right hip, a satchel on the left). This is accepted like
+     the flipped sun, and noted for the owner.

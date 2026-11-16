@@ -53,11 +53,20 @@ additions:
    `rig.bones`. Use automatic weights, plus a **cloak chain** (`cloak.1`,
    `cloak.2`) weighted to the cloak's lower rings. Parent the weapon mesh to
    `weapon`, on render layer 2.
+   *As built (spike, 2026-11-15):* limbs and props are RIGID parts parented
+   to their bone (`kit.bind_rigid`), and only the cloak is skinned, with
+   **scripted** weights by height (`kit.bind_skin`). Bone-heat weights were
+   not used: they are not deterministic to review, and the body is separate
+   parts. The cloak skinned cleanly (`dx_paper_cuts_spike.md`).
 3. **`key_action(name)`.** For each frame *i* of the action, set every
    `keys` channel to value *i* and insert a keyframe at timeline frame *i*.
    Rendering samples those frames directly, so no interpolation is involved.
    **Secondary motion:** `cloak.*` channels take the value from frame *i − 1*
    (wrapping), which is the "lag by one sample" note in the TOML.
+   *As built:* `[action.<a>.dir.<d>]` tables replace channels for one
+   direction, because a down-walk is drawn, not rotated (§4, anchor drift).
+   The channel semantics are in `pose_data.py`, which needs no Blender and is
+   pinned by `tests/test_dungeons_frames.py`.
 4. **`set_direction(d)`.** Yaw the root (not the camera) to
    `camera.yaw_deg[d]`, so the light stays fixed relative to the screen.
 5. **`render_frame(action, dir, i, layer)`.** Write
@@ -69,6 +78,8 @@ additions:
 6. **`project_anchor()`.** Project the `root` bone's head to the sprite pixel
    and write it to `build/dgn_art_work/anchors.json`. The pixelate stage
    compares this against `foot_row`.
+   *As built:* it is written per frame into `build/dgn_art_work/render_log.json`
+   (with the render seconds), and `sheets.py` does the comparison.
 
 **The smoke test first.** One frame: the wanderer, `walk` frame 0, `right`,
 body layer, then through `pixelate_actor.pixelate` into a PNG. Look at it
@@ -76,19 +87,28 @@ before writing anything else.
 
 ## 4. Acceptance metrics (asserted by `sheets.py`, reported per run)
 
-The numeric thresholds below are **first-pass guesses**, not measurements.
-Recalibrate them on the first real renders and record the measured values
-here, per CLAUDE.md rule 1.
+**Calibrated on the model spike's renders (2026-11-15)**, the wanderer's
+`idle` + `walk` × 3 directions, whose figure covers about 58 model pixels a
+frame. The thresholds live in `sheets.py`, and `tests/test_dungeons_frames.py`
+recomputes them from the committed strips. "Caught" is what the metric
+flagged while the model was being tuned, so it is known to fire.
 
-| metric | rule | why |
-|---|---|---|
-| **fit** | every frame fits the 16×16 box; `pixelate` refuses otherwise | sf-gt's refuse-never-crop |
-| **anchor drift** | `foot_row` is the same row for every grounded frame of an action in a direction. A drift of ≥ 1 px fails | otherwise the hero "slides" against the foot-box collision (05 §1) |
-| **anchor agreement** | `foot_row` equals the projected `root` row ± 1 | the anchor is measured from the renders and published as data (sf-gt lesson) |
-| **shimmer** | idle frames 0↔1 differ by 6–30 px | 0 = no motion; > 30 = the shading "boils" rather than moving |
-| **walk legibility** | contact vs passing frames differ by ≥ 12 px in the leg rows | the stride must read at 1 px limbs |
-| **role coverage** | every role in `roles.toml` appears in at least one frame of the model | an unused role is a palette slot wasted, or a material bound wrongly |
-| **readability (judged)** | the lineup sheet: both heroes on each biome floor, captured **from the ROM** | 11 §6 |
+| metric | rule (calibrated) | measured on the shipped strips | caught during tuning | why |
+|---|---|---|---|---|
+| **fit** | every frame fits the 16×16 box; `pixelate` refuses otherwise | 18/18 fit; model rows 1–13, cols 3–11 | `downed` facing down (an untuned probe): 4 px below the box | sf-gt's refuse-never-crop |
+| **anchor drift** | `foot_row` is the same row for every frame of an action in a direction: **drift 0** | 0 in all 6 (foot row 13 everywhere) | up/down walk at the side view's ±30° stride: `[14,13,14,13]`, drift 1 (depth projects to screen y at 9.2 px/u). Fixed by the per-direction tables | otherwise the hero "slides" against the foot-box collision (05 §1) |
+| **anchor agreement** | `foot_row` equals the projected `root` row **exactly** (± 0, tightened from ± 1) | 0 in all 6 | the same drift, as 1 | the anchor is measured from the renders and published as data (sf-gt lesson) |
+| **shimmer** | idle frames 0↔1 differ by **6–30 px** (unchanged) | right 23, up 11, down 24 | a 0.02 u hip dip: 40 (every edge pixel moved). The idle is now a nod | 0 = no motion; > 30 = the shading "boils" rather than moving |
+| **walk legibility** | contact↔passing differ by **≥ 20 px over the frame**, AND **≥ 12 (right) / ≥ 8 (down) px in the bottom 4 rows**. Up has no leg-row floor | frame: right 47–50, up 28–30, down 47–54. Leg rows: right 17–19, down 9–15, up 5–6 | a full-length bell cloak: right 10–15 px, legs invisible by eye. And see the note below | the stride must read at 1 px limbs |
+| **role coverage** | every role in `roles.toml` appears in at least one frame | all 7 roles; every ramp step used | `detail` (the eyes) absent until the eyes grew to 0.026 × 0.034 u | an unused role is a palette slot wasted, or a material bound wrongly |
+| **readability (judged)** | the lineup sheet: both heroes on each biome floor, captured **from the ROM** | not yet (no ROM). The spike's judgement is on `art/dungeons/actors/sheet_wanderer.png` | — | 11 §6 |
+
+**Why up has no leg-row floor.** From behind, the cloak hides the legs, and the
+up-walk reads by the body's sway (`spine.roll` ±10°). Worse, while the
+up-walk's feet were sinking 0.037 u into the ground on contact, its leg rows
+read 15 px and passed. The metric was counting the ground clipping the legs.
+A change count can reward a defect, so the frame rule carries this direction,
+and a judged look at the sheet carries the rest.
 
 ## 5. The first Blender session's checklist (a fresh agent, cold)
 

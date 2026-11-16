@@ -27,7 +27,7 @@
 | [11 — Art pipeline](11_art_pipeline_3d.md) | Blender prerenders → SNES, ported from SUPERFORGE GT: data-pass renders, material-vote pixelation, palette role tables, plus what is new (skinned characters, tiles) |
 | [12 — Music and sound](12_music_and_sound.md) | 80s orchestral in three colours, adaptive layers on TAD's channel mask, the synthesised orchestra, the cue sheet |
 | [13 — Character pipeline](13_character_pipeline.md) | animated figures: the rig and actions as data, the ported pixelate stage (tested without Blender), the `bpy` script to write, acceptance metrics, and where Elyum helps (references only) |
-| [14 — The model spike](14_model_spike.md) | **next:** the local, Blender-driven proof that an animated figure comes out as a 16×16 sprite that reads |
+| [14 — The model spike](14_model_spike.md) | the local, Blender-driven proof that an animated figure comes out as a 16×16 sprite that reads. **Ran 2026-11-15: GO, with adjustments (§6)**; friction in [dx_paper_cuts_spike](dx_paper_cuts_spike.md) |
 | [HANDOFF](HANDOFF.md) | where everything is, what is verified, and what is next |
 | [research/genre_reference.md](research/genre_reference.md) | what the genre reference and its precedents do (the evidence behind 01–06) |
 | [research/kit_capabilities.md](research/kit_capabilities.md) | what this kit already proves, game by game (Proven / Near / New) |
@@ -41,7 +41,7 @@ because a model that runs beats prose that describes:
 python3 tools/dungeons/levelgen.py 0x1234 4          # ASCII floor + path, draws, validation
 python3 tools/dungeons/render_preview.py out.png     # floors as a picture (img/levelgen_preview.png)
 python3 tools/dungeons/loot.py                       # sample drops by floor
-python3 -m pytest tests/test_dungeons_model.py tests/test_dungeons_pixelate.py -q   # 120 checks, ~3 s
+python3 -m pytest tests/test_dungeons_model.py tests/test_dungeons_pixelate.py tests/test_dungeons_frames.py -q   # 130 checks, ~4 s
 ```
 
 | file | what it pins |

@@ -36,20 +36,32 @@ bones = [
   "weapon",                    # parent of the swing layer (render layer 2)
 ]
 anchor_bone = "root"          # projected to the sprite = the foot point (13 §5)
-anchor_px = [8, 13]           # PROVISIONAL: where the camera puts the root in the
-                              # 16x16 box. The spike measures the real foot row and
-                              # corrects this (sf-gt: anchors are measured, then published)
+anchor_px = [8, 13]           # MEASURED (model spike, 2026-11-15): the camera puts
+                              # the root here, and the wanderer's foot row is 13 in
+                              # all 18 idle/walk frames x 3 directions, equal to the
+                              # projected root row. sheets.py publishes it to
+                              # anchors.json. (The smoke dummy measured 14: its deep
+                              # box base reaches 1.4 px toward the camera.)
 
 # Each action: the frames the GAME shows (count, hold in game frames) and the
 # pose curve the script keys. Pose values are exaggerated ~1.5x over realistic:
 # at 16 px a 1-px limb must still read as motion.
+#
+# Channels (pose_data.py checks them; kit.py's doc has the geometry):
+#   <bone>.pitch  degrees about the model's side axis. + leans an up-pointing
+#                 bone forward and swings a down-pointing one back (+shin
+#                 bends the knee, +cloak trails)
+#   <bone>.roll   degrees about the facing axis (a sideways lean)
+#   <bone>.z      units of world z
+# [action.<a>.dir.<d>] replaces those channels for direction d only.
+# cloak.* channels lag the body by one sample (frame i shows value i-1).
 [action.idle]
 frames = 2
 hold = [30, 30]
 
 [action.idle.keys]
-"spine.pitch" = [0.0, 3.0]
-"hips.z" = [0.0, -0.02]
+"spine.pitch" = [0.0, 4.0]       # a nod, not a dip: a sub-pixel hips.z drop
+"head.pitch" = [0.0, 4.0]        # shifted every edge pixel (shimmer 40, > 30)
 "cloak.1.pitch" = [0.0, 6.0]
 
 [action.walk]
@@ -63,8 +75,34 @@ hold = [8, 8, 8, 8]           # a 32-frame cycle = 1.5 px/tick * 32 = 48 px stri
 "shin.R.pitch" = [10, 0, 0, 40]
 "upperarm.L.pitch" = [-25, 0, 25, 0]
 "upperarm.R.pitch" = [25, 0, -25, 0]
-"hips.z" = [0.0, 0.04, 0.0, 0.04]
-"cloak.1.pitch" = [10, 4, 10, 4]
+"hips.z" = [-0.04, 0.0, -0.04, 0.0]   # rest = a straight leg (0.30 u) on the ground;
+                                      # a 30 deg stride spans 0.30 cos 30 = 0.26, so
+                                      # contact drops 0.04 to keep both feet down
+"cloak.1.pitch" = [22, 12, 22, 12]    # trails hard: at 35 deg the cloak's near side
+                                      # hides the legs unless it swings clear
+
+# Up and down: the stride runs along the camera's depth axis, and depth
+# projects onto screen y at sin(35 deg) * 16 = 9.2 px/unit, so a full stride
+# puts the leading toe a row below the passing frame's (measured: drift 1).
+# The legs read here by WHICH LEG IS LIFTED (the knee), not by the stride,
+# and the body sways (spine.roll) the way a drawn back/front walk does. An
+# 8 deg stride needs no contact drop (0.30 cos 8 = 0.297), and keeping the
+# -0.04 sank the feet 0.037 u into the ground (measured in Blender).
+[action.walk.dir.up]
+"spine.roll" = [0, 10, 0, -10]
+"hips.z" = [0.0, 0.0, 0.0, 0.0]
+"thigh.L.pitch" = [8, 0, -8, 0]
+"thigh.R.pitch" = [-8, 0, 8, 0]
+"shin.L.pitch" = [0, 60, 10, 0]
+"shin.R.pitch" = [10, 0, 0, 60]
+
+[action.walk.dir.down]
+"spine.roll" = [0, 10, 0, -10]
+"hips.z" = [0.0, 0.0, 0.0, 0.0]
+"thigh.L.pitch" = [8, 0, -8, 0]
+"thigh.R.pitch" = [-8, 0, 8, 0]
+"shin.L.pitch" = [0, 60, 10, 0]
+"shin.R.pitch" = [10, 0, 0, 60]
 
 [action.roll]
 frames = 3

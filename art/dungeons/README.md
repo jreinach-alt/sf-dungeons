@@ -11,8 +11,14 @@ Ported from sf-gt's `art/fgt/cars/`.
 |---|---|---|
 | `blender_common.py` | Blender | scene, the sf-gt light rig, the data-pass compositor, the ortho actor camera, role materials, mesh primitives |
 | `check_blender.py` | Blender | the smoke frame (`docs/dungeons/14` step 2) |
-| `build_all.sh` | shell | the stage runner: `smoke` exists today, and render / pixelate / sheets come with the spike |
+| `build_all.sh` | shell | the stage runner: `smoke`, `render`, `pixelate`, `sheets` (no argument runs the last three) |
 | `actors/actions.toml` | data | the camera, light, bones, actions, key poses and timings, read by both the Blender script and the game |
 | `actors/roles.toml` | data | palette roles: material id → palette index |
 | `actors/pixelate_actor.py` | Python | data frame → indexed sprite (`tests/test_dungeons_pixelate.py`) |
 | `actors/verify_smoke.py` | Python | checks the smoke frame |
+| `actors/render_actor.py` | Blender | the wanderer: parts, armature, skinned cloak, keyed actions, 3 directions → raw data frames (`--inspect`: colour pictures for looking) |
+| `actors/kit.py` | Blender | figure parts (shell, limb, open cloak), the armature, rigid/skinned binding, posing and keying |
+| `actors/pose_data.py` | Python | the `actions.toml` channel semantics (lag, per-direction tables) and their checker, with no Blender |
+| `actors/pixelate_frames.py` | Python | the pixelate stage: raw frames → `frames/<model>_<action>_<dir>.png` |
+| `actors/sheets.py` | Python | the sheets stage: `sheet_<model>.png`, `anchors.json`, `metrics.json` (13 §4) |
+| `actors/frames/` | tracked | the indexed strips (index 0 transparent): the converter's input |
