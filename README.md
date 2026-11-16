@@ -7,6 +7,9 @@ erasing from the edges inward. Every floor is generated fresh, and the gear it
 drops decides who becomes the brawler, the archer or the healer. Nobody picks
 a class.
 
+The screen splits when the wanderers part and merges when they come back
+together, and the dungeon rewards those who stay together.
+
 Built on [SuperForge](KIT.md), a SNES engine whose declarative resource
 allocator proves at build time that a game's features fit the machine. It
 targets real hardware at a hard 60 fps, LoROM, with battery save.

@@ -19,7 +19,7 @@
 | [03 — Level generation](03_level_generation.md) | the generator, defined by an **executable oracle** |
 | [04 — Gear and loot](04_gear_and_loot.md) | the 4-byte item record, power vs threat, enchants, drops |
 | [05 — Combat and entities](05_combat_and_entities.md) | the hero kit, enemies, the actor record, AI cadence |
-| [06 — Co-op, camera, HUD and flow](06_coop_camera_hud.md) | the spread leash, revive/lives, loot fairness, OAM rotation, the scene list |
+| [06 — Co-op, camera, HUD and flow](06_coop_camera_hud.md) | **split screen that merges** (a Voronoi seam over one resident floor), the stay-together rules, live gear swapping on Select, the HUD, revive/lives, OAM rotation, the scene list |
 | [07 — Assets and audio](07_assets_and_audio.md) | art direction, the asset list, the generator, sound |
 | [08 — Milestones](08_milestones.md) | **the build order**: M0–M10, each with rendered-output acceptance tests |
 | [09 — Open questions](09_open_questions.md) | the owner's decisions, each with a working recommendation |
@@ -41,7 +41,7 @@ because a model that runs beats prose that describes:
 python3 tools/dungeons/levelgen.py 0x1234 4          # ASCII floor + path, draws, validation
 python3 tools/dungeons/render_preview.py out.png     # floors as a picture (img/levelgen_preview.png)
 python3 tools/dungeons/loot.py                       # sample drops by floor
-python3 -m pytest tests/test_dungeons_model.py tests/test_dungeons_pixelate.py -q   # 120 checks, ~3 s
+python3 -m pytest tests/test_dungeons_model.py tests/test_dungeons_pixelate.py -q   # 122 checks, ~3 s
 ```
 
 | file | what it pins |
@@ -62,9 +62,13 @@ output rather than a proxy: the expected tilemap is computable.
 
 - The template linter's first run caught `start_cross` walling off its own
   north door. 20,000 generated floors had never exercised that door.
-- The CHR arithmetic showed resident hero frames overflow an OBJ name table
-  (312 tiles against 256). That turned "heroes are sprites" into "heroes are
-  streamed" (02 §1.2) and "the boss is sprites" into "the boss is BG2" (02 §1).
+- The CHR arithmetic showed per-weapon swing art overflowing an OBJ name
+  table (312 tiles against 256).
+  - The first answer was to stream the heroes.
+  - The owner preferred to spend the budget on split screen, so the swings
+    became 3 weapon-class arcs instead, and the heroes fit **resident**
+    (~232 of 256, enforced by a test; 02 §1.2).
+  - The boss became BG2, freed by the merge lock in boss rooms (02 §1).
 
 ## The five decisions that shape everything
 
@@ -73,8 +77,10 @@ output rather than a proxy: the expected tilemap is computable.
    motion costs two scroll registers.
 2. **Generation is template stitching on a 4×4 grid** with a guaranteed
    critical path, deterministic per seed, and verified by its oracle.
-3. **A shared screen with a spread leash.** The kit's split screen costs
-   every BG layer, and the SNES cannot zoom Mode 1.
+3. **Split screen that merges when the heroes are together.** Both cameras view
+   the one resident floor (zero extra VRAM, the `split_v_fight` trick). The
+   seam follows the players in any direction, and staying together is
+   rewarded rather than forced (06 §2–3).
 4. **The item record stores the roll, not the stats.** It is 4 bytes, and
    rarity is derived.
 5. **Measured caps keep 60 fps:**
@@ -84,6 +90,13 @@ output rather than a proxy: the expected tilemap is computable.
    - a hand-kept per-scanline ledger, checked against STAT77 in M5
 
 ## The creative direction (owner, 2026-11-16)
+
+- **Camera:** two-player split screen that merges when the heroes are
+  together, with mechanics that reward staying together (06).
+- **Gear:** four slots (primary, ranged, armor, accessory), swapped live on
+  Select, sparks included. There is no shared ammo: bows have per-hero arrows,
+  wands recharge (04, 06 §4).
+- **Flow:** camp ⇄ level-select map → level → back to camp (06 §8).
 
 - **Visuals** borrow the mood of a 1984 fantasy film: a storybook world
   erased by an advancing void, painted 80s luminosity, vast scale. The take

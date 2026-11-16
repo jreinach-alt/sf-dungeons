@@ -29,7 +29,7 @@ a held 5th: a hopeful question. It appears in:
 | Wonder | full, on strings |
 | Mystery | fragmented, on solo flute |
 | War | augmented and minor, on horns |
-| the descend-card sting | 2 s on celesta |
+| the map's embark sting | 2 s on celesta |
 | floor cleared | resolved to the tonic, full ensemble |
 
 **The Unwriting motif.** A descending whole-tone line. It never resolves.
@@ -63,12 +63,33 @@ song reload, so there is no seam. Each floor song is written as **one song,
   per the audio carve-out in CLAUDE.md rule 2: the channels' RMS in
   fight-on and fight-off windows differs.
 
-## 3. Instruments: synthesised, per house policy
+## 3. Instruments: first-party, synthesised (owner policy, 2026-11-16)
 
-`tools/gen_audio_samples.py` records a project decision (2026-07-30): **every
-sample is synthesised by the repo, and none is sourced.** This spec keeps that
-rule (09 Q9 asks whether to relax it). The 80s orchestral sound is then an
-honest synth-orchestra, which is exactly the hybrid texture the maze score is
+**The policy, as the owner set it (09 Q9, decided):**
+
+- **No external samples.** Importing outside audio and BRR-encoding it has
+  consistently produced poor results, and it is **not approved**.
+- **Never copy a raw sample from a commercially shipped game.** Not approved.
+- **Learning from shipped games is approved.** You may study how shipped
+  SNES orchestral samples are *built* and adapt the patterns:
+  - attack length versus loop length
+  - loop points on 16-sample block boundaries
+  - the BRR filter choice per block
+  - the spectral shape of a horn or a choir "ah"
+  - the per-block range (shift) and how it decays across an attack
+- **The approved route to a more orchestral sound.** Identify the target
+  sound's characteristics from what the model already knows (call it "the
+  LLM library"). Then **reshape a procedural sample until its BRR block
+  pattern matches the observed pattern**. The sample stays first-party: every
+  byte computed by a committed script from its constants, as
+  `tools/gen_audio_samples.py` already does (decision of 2026-07-30).
+- **Record the reasoning in the generator.** Each such instrument carries a
+  comment stating the observed pattern it targets (block count, loop block,
+  filter sequence, shift envelope) and the knobs that matched it. It must not
+  carry a reference to any specific game's sample data.
+
+The result is an honest synth-orchestra, shaped by what real cartridge
+orchestras teach. That is also exactly the hybrid texture the maze score is
 known for.
 
 **Start from SUPERFORGE GT's synthesiser** (`sf-gt:tools/fgt/gen_audio_samples.py`,
@@ -137,6 +158,7 @@ only 8 voices, so an SFX borrows a voice from the song.
 
 | song | colour | layers | tier |
 |---|---|---|---|
+| **Map: "The Unwritten Roads"** | Wonder → Mystery | strings + celesta, the Lantern on solo flute | M |
 | **Title: "The Book Opens"** | Wonder → the War tag | a full statement of the Lantern | M |
 | **The Last Lantern (camp)** | Wonder, quiet | strings, celesta, pad | M |
 | **The Hollow Wood (floor)** | Mystery ↔ War, adaptive §2 | 8-ch layered | M |
@@ -147,9 +169,10 @@ only 8 voices, so an SFX borrows a voice from the song.
 
 ## 6. Process (for the composing agent)
 
-1. Write the synthesis recipes first (M10a). Audition them as WAVs before any
-   melody is written. If the brass or the choir fails to convince, raise
-   09 Q9 then. Don't compose around a weak instrument.
+1. Write the synthesis recipes first (track S1). Audition them as WAVs before
+   any melody is written. If the brass or the choir fails to convince, apply
+   the block-pattern reshaping route (§3) before composing. Don't compose
+   around a weak instrument.
 2. Write each song as MML, with a header comment that states:
    - the mode
    - the leitmotif treatment

@@ -105,7 +105,7 @@ here, per CLAUDE.md rule 1.
    directions, then run pixelate and `sheets.py`.
 5. Iterate on `actions.toml` values, not on code, until the §4 metrics pass
    and the lineup reads.
-6. Hand the frames to the converter (11 §5 stage 6), so M3's streamed-slot
+6. Hand the frames to the converter (11 §5 stage 6), so M3's OAM-frame
    test has real art.
 
 ## 6. Elyum and AI generation: what it can and cannot do here

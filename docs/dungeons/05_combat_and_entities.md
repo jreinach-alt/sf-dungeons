@@ -20,7 +20,7 @@
 - **Knockback.** 6 px over 6 frames, away from the source, resolved through
   collision.
 
-### 1.1 Melee (B)
+### 1.1 Primary (B)
 
 - A swing is: wind-up 4 f → active 4 f → recovery, to the weapon's `rate`.
 - The hitbox is an arc of the weapon's `reach` and `arc`, approximated as 1–3
@@ -28,20 +28,26 @@
   - arc ≤ 45°: 1 box
   - arc ≤ 120°: 2 boxes
   - arc > 120°: 3 boxes
-- The swing sprite is one 16×16 entry in the hero's swing slot. Per weapon
-  base there are 3 frames per direction × 4 directions, with diagonals using
-  the nearest cardinal.
+- **The swing sprite is a weapon-*class* arc** (slash, thrust or smash, from
+  the base's `swing` in `gear.toml`). It is one 16×16 entry beside the hero's
+  `strike` pose, 3 frames, in 2 rendered orientations, with the others by
+  H/V flip. Heroes are resident and these arcs are why that fits (02 §1.2).
+  Diagonals use the nearest cardinal.
 - A swing hits each enemy at most once.
 - Hit-stop: 2 frames of freeze on the hit enemy only. It is cheap and reads
   as impact.
 
 ### 1.2 Ranged (Y)
 
-- **Ammo:** one pool per player, maximum 40.
-  - The bundle drop gives +10.
-  - QUIVER regenerates 1 ammo per (120 − tier × 30) frames.
-  - EMBER ROD uses no ammo.
-- **A shot** is an 8×8 sprite from the shared shot pool:
+- **Bows** spend the hero's **own arrows**. The quiver size comes from the
+  base, plus PLENTY. An arrow drop gives +8 to its owner only. At 0 arrows,
+  Y does nothing but flash the HUD count.
+- **Wands** spend a **charge**. Charges refill one per `recharge` frames
+  (faster with PLENTY), and a wand is never empty for long. The charge pips
+  are on the HUD.
+- Nothing ranged is ever shared between players (04 §2.1).
+- **A shot** is an 8×8 sprite from the level's shot pool (heroes' and
+  enemies' shots share the *pool*, never ammo):
   - speed: the base's `speed` value
   - lifetime: 90 frames
   - It stops on a wall, passes over chasm, and dies on hit unless it has
@@ -65,9 +71,10 @@
 - Heals 60% of max HP. The cooldown is 2,700 frames (45 s), tick-scaled.
 - The HUD shows a ready pip.
 
-### 1.5 Artifacts (L/R)
+### 1.5 Accessories (R)
 
-Each artifact is a verb with its own cooldown (tick-scaled), in the 4–20 s
+One accessory is equipped at a time (owner, 2026-11-16). Each is a verb with
+its own cooldown (tick-scaled), in the 4–20 s
 band.
 
 | base | effect | entities used |
@@ -77,7 +84,7 @@ band.
 | BLINK SASH | an 8 f, 40 px dash with full i-frames, passing through enemies (not walls) | 0 |
 | HOUND CALL | summons a friendly hound actor for 15 s; it uses an actor slot and the enemy AI with its target set inverted | 1 actor |
 | QUAKE BELL | stuns enemies within 40 px for 90 f | 4 FX |
-| SUN LANTERN | 2 s of blinding light: enemies on screen are stunned for 60 f. On darkness floors (tier C) it opens the lantern window | screen flash via the fixed colour |
+| SUN LANTERN | 2 s of blinding light: enemies on screen are stunned for 60 f. On darkness levels (tier C) it opens the lantern window | screen flash via the fixed colour |
 
 ## 2. Enemies (tier M: 4 types + 1 boss)
 
@@ -91,7 +98,7 @@ The archetype names below are mechanical. Their in-world names and looks
 | **archer** | 16×16 | 8 | keep 64–96 px away, fire 1 shot every 90 f | 16 f draw pose |
 | **brute** | 32×32 | 40 | slow walk, 24 px slam | 24 f wind-up, ground FX |
 | **skitter** | 16×16 | 4 | packs of 3, a fast zig-zag charge, then explode on contact | blink |
-| **boss: the Warden** | 64×64, **drawn on BG2** (02 §1) | 300 | 3 phases: a slam ring (shots) → summons 2 grunts → charge across the arena | 30 f for every attack |
+| **boss: the Hollow Crown** (10 §5) | 64×64, **drawn on BG2** (02 §1) | 300 | 3 phases: a slam ring (shots) → summons 2 grunts → charge across the arena | 30 f for every attack |
 
 - **HP scaling:** `HP × MULT[threat_delta]`, and **+50% with 2 heroes**. That
   co-op factor is this spec's own tuning; the reference's figure was not
@@ -127,8 +134,13 @@ The archetype names below are mechanical. Their in-world names and looks
   perpendicular step for 16 frames (an FX draw). Rooms are designed for
   that; there is no A*.
 
-### 2.2 The Warden on BG2
+### 2.2 The boss on BG2
 
+- **Why BG2 is free.** The boss gate opens only with both heroes in its
+  doorway cell. The camera then **locks merged** for the fight (06 §3 rule
+  8), so camera B, BG2's other job, is not needed. At the lock, in VBlank,
+  `dgn_bg` re-points BG2SC/BG12NBA from the floor to the boss's map and CHR
+  (both resident: 02 §1.1). The window seam is disarmed for the fight.
 - **Position.** The boss's world position drives BG2's scroll: `BG2HOFS = cam_x − boss_x`.
 - **Poses.** A pose is a tilemap swap: 8×8 cells, queued through a whole-map
   DMA of the 64×64 px region (512 B) in one VBlank.

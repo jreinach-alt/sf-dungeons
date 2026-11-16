@@ -59,7 +59,7 @@ Rejected alternatives:
 - `run_seed` is captured from `sm_frame` when Start is pressed on the title.
 - A test sets the seed by **declared input**: driving Start on a known frame
   under the lockstep `Machine`. It never pokes WRAM.
-- The descend card shows the seed as 4 hex digits. Typing a seed in (tier C)
+- The map's embark card shows the seed as 4 hex digits. Typing a seed in (tier C)
   makes daily runs and bug reports reproducible.
 
 ## 3. Algorithm (oracle: `levelgen.generate`)
@@ -121,7 +121,7 @@ Measured on the oracle over 20,000 floors (seeds 1–2000 × floors 0–9):
 | `$02` | rubble | yes | yes | decor |
 | `$03` | brazier | yes | yes | animated by a palette cycle (tier S) |
 | `$04` | doorway | yes | yes | open arch; becomes a **sealed gate** while a pack is alive (§5) |
-| `$05` | exit stairs | yes | yes | triggers `descend` once the boss is dead |
+| `$05` | exit stairs | yes | yes | ends the level (→ `results`) once the boss is dead |
 | `$10` | wall | no | no | **autotiled** (§4.2) |
 | `$11` | pillar | no | no | |
 | `$20` | chasm | no | **yes** | the tactical tile: enemies across a chasm can be shot but not reached |

@@ -22,7 +22,7 @@
 | Cleanup and outline happen **after** the downscale, in Python. Tiny sprites get the shadow but no outline ring | `pixelate.py` steps 3–4 | the same rule for 8×8 drops and shots |
 | A pixel outside the box is an **error, never a silent crop** | `pixelate.py` step 5 | same |
 | **A fixed anchor** (ground point) per size, published as data and read by the engine | `anchors.json`, `FGT_CAR_T<t>_ANCHOR_*` | the foot point anchors the 10×6 foot box (05 §1) |
-| Streaming one frame per VBlank from ROM into fixed VRAM slots: 1.3 MB of car frames through 16 KB | `sf-gt:README.md` | **precedent for `obj_stream`** (02 §1.2), which drops from "New" to "Near" |
+| Streaming one frame per VBlank from ROM into fixed VRAM slots: 1.3 MB of car frames through 16 KB | `sf-gt:README.md` | not used at tier M: heroes are resident (02 §1.2). It is the documented way back if art ever needs more frames |
 | A staged `build_all.sh`: render → pixelate → sheets → convert → `--check` | `art/fgt/cars/build_all.sh` | `art/dungeons/build_all.sh`, same stages |
 
 ### 1.1 The operational lessons sf-gt paid for (`sf-gt:docs/fgt/dx_paper_cuts_cars.md`)
@@ -103,8 +103,9 @@ gold 12.
 
 That matches 10 §2's "glow hue on lit edges".
 
-**Swing layer.** A weapon material maps into the hero palette's 10–13, so
-swings need no palette of their own.
+**Swing arcs.** The three class arcs (slash, thrust, smash) are rendered from
+a swept-blade mesh whose materials map into the hero palette's 10–13, so arcs
+need no palette of their own.
 
 ## 5. Stages (`art/dungeons/build_all.sh`, the sf-gt stage shape)
 
@@ -122,7 +123,7 @@ swings need no palette of their own.
    every enemy on each biome floor.
 6. `tools/gen_dungeons_assets.py` (the converter, in the build) →
    `build/dungeons/`:
-   - hero and swing frame blobs in DMA order (`obj_stream`)
+   - hero body frames and swing arcs as resident OBJ CHR (table 0)
    - resident enemy CHR (deduped)
    - the `tiles16` quad-layout BG CHR (N, N+1, N+16, N+17), deduped, with
      mirrors folded into flip bits
@@ -136,9 +137,9 @@ swings need no palette of their own.
 
 - **The CHR round trip.** For 5 metatiles and 3 hero frames, VRAM tiles
   decoded with the live CGRAM equal the indexed PNG pixels.
-- **The streamed slot.** After a known input sequence, the hero's VRAM slot
-  equals the frame blob entry for the expected action, direction and frame
-  (08 M3).
+- **The OAM frame.** After a known input sequence, the hero's OAM tile number
+  selects the expected action, direction and frame, and the CHR at that
+  number equals the indexed PNG (08 M3).
 - **The palette swap.** CGRAM OBJ palettes 0 and 1 differ only in entries
   1–7, and those equal `palettes.json`'s P1 and P2 ramps.
 - **The anchor.** A hero at a known world position has its OAM x/y equal to

@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import prng  # noqa: E402
 
 HERE = os.path.dirname(__file__)
-SLOTS = ("melee", "ranged", "armor", "artifact")
+SLOTS = ("primary", "ranged", "armor", "accessory")
 
 
 def load(path: str | None = None) -> dict:
@@ -74,7 +74,7 @@ class Roller:
         if rar == "common" and (self.pity[player] >= g["rarity"]["pity_rare_after"] or min_rarity != "common"):
             rar = "rare"
         uniques = [b for b in g["base"] if b["slot"] == slot and "of" in b]
-        if rar == "unique" and not uniques:      # artifacts have no uniques
+        if rar == "unique" and not uniques:      # accessories have no uniques
             rar = "rare"
         self.pity[player] = self.pity[player] + 1 if rar == "common" else 0
         # draw 3: base
@@ -89,7 +89,7 @@ class Roller:
         off += {"common": 0, "rare": p["rare_bonus"], "unique": p["unique_bonus"]}[rar]
         power = max(1, min(255, threat(g, floor) + off))
         e1 = e2 = 0
-        if slot != "artifact":
+        if slot != "accessory":
             if rar == "unique":
                 sig = g["ench_by_name"][base["signature"]]
                 e1 = sig["id"] << 3 | 2

@@ -33,8 +33,7 @@
 | need | status | evidence and consequence |
 |---|---|---|
 | Two pads | **Proven** | `engine/features/input2` (DP `inp2_cur/prev/press`, from `$421A`). `room` is already a 2-hero shared-screen rail: `tests/test_c2_slice_c.py::test_pad2_drives_the_twin`. `Machine.advance(pad1=, pad2=)` drives both. |
-| Shared camera | **Near** | The `split_v_fight` midpoint plus the `camera_follow` world clamp. Leash and warp are new game logic (DP only). |
-| Split screen | **Refused by design here** | `split_v_bg` owns BG1–3 and every window register, and is horizontal-only. No Mode 1 two-axis split is proven. |
+| Split screen | **Near** (revised 2026-11-16) | `split_v_bg` proves two cameras onto ONE stage copy (BG2SC → BG1's map, BG12NBA → BG1's CHR), window 1 as the seam, window 2 as the divider, and no HDMA. What it does not prove: 2-axis cameras (free: each layer has its own HOFS/VOFS), a non-vertical seam (06 §2.3, 2 HDMA channels, spiked in 08 M3b), or a divider without BG3 (window 2 over the backdrop ink, 06 §2.5). The first draft rejected split screen as "costs every BG layer". It does not, once the divider leaves BG3 and the floor is resident. |
 | Whole floor resident in VRAM | **Near** | The 64×64 tilemap `shape` is proven (`pfs_bg/feature.toml:72`). `tiles16` is in the video vocabulary, but **no rail declares it yet** (`docs/100` "NO RAIL DECLARES tiles16 TODAY", an art-budget reason that does not apply to a metatile game). 64×64 entries × 16 px = 1024×1024 px = one whole generated floor, 8 KB, uploaded once at enter. |
 | 2-axis streaming from WRAM | **Avoided** | `pfs_stream` streams from two 32 KB ROM blobs. A generated level would need both in WRAM (64 KB). The `tiles16` route above makes streaming unnecessary. |
 | Runtime cell edits (doors, chests) | **Proven pattern** | `breaker_bg`'s `brk_q`, 4 arbitrary BG1 cells per frame (`breaker_bg/feature.toml:99-114`). |
@@ -45,7 +44,7 @@
 | Projectiles | **Proven** | `shmup` bullets; `m7_oshoot` on `pool`. |
 | Hero sprites, P1/P2 tint | **Proven** | `split_v_obj`: one 32×32 knight drawn twice with an OBJ palette swap. |
 | Metasprites / Y-sort | **New** | Zero hits for "metasprite". Every cast is resident CHR uploaded at enter. |
-| OBJ frame streaming | **Near (sibling repo)** | Not in this tree, but SUPERFORGE GT (`jreinach-alt/sf-gt`) ships per-VBlank car-frame streaming from ROM into fixed slots. Port it (02 §1.2, 11 §1). |
+| OBJ frame streaming | **Not used** (heroes resident, 02 §1.2) · **Near (sibling repo)** if ever needed | Not in this tree, but SUPERFORGE GT (`jreinach-alt/sf-gt`) ships per-VBlank car-frame streaming from ROM into fixed slots. Port it (02 §1.2, 11 §1). |
 | HUD | **Proven** | OBJ pips (`room_logic` `hud_pips`), BG3 text via `bg_text`. Note that a running scene gets 4 text cells per frame. |
 | Scenes and transitions | **Proven, with a trap** | `scene_mgr` + `fade`/`mosaic`. **`sm_request` to the scene already running is a no-op**, so "next floor" must go through another scene (06 §5). |
 | Save | **Proven, too small** | 2 slots × 24 B payload with CRC (`save/feature.toml:9`). The payload cap is "a choice, not a law". (The jam's no-SRAM rule does not apply: this is not a jam game.) |

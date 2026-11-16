@@ -85,9 +85,35 @@ def test_loot_record_layout():
                 assert 1 <= (b & 7) <= 3
                 ench = next(e for e in g["enchant"] if e["id"] == b >> 3)
                 assert base["slot"] in ench["slots"]
-        if base["slot"] == "artifact":
+        if base["slot"] == "accessory":
             assert rec[2] == rec[3] == 0
         assert not (rec[2] and rec[3] and rec[2] >> 3 == rec[3] >> 3), "duplicate enchant"
+
+
+def test_every_primary_base_names_an_arc_class():
+    import tomllib
+    p = os.path.join(os.path.dirname(__file__), "..", "art", "dungeons", "actors", "actions.toml")
+    with open(p, "rb") as f:
+        classes = set(tomllib.load(f)["arc"]["classes"])
+    g = loot.load()
+    for b in g["base"]:
+        if b["slot"] == "primary":
+            arc = b.get("swing") or g["by_id"][b["of"]]["swing"]
+            assert arc in classes, b["name"]
+
+
+def test_ranged_bases_are_bows_with_ammo_or_wands_with_charges():
+    # Owner 2026-11-16: no shared ammo. A bow has its own quiver; a wand has
+    # charges that recharge. Nothing ranged is neither, and nothing is both.
+    g = loot.load()
+    for b in g["base"]:
+        if b["slot"] != "ranged" or "of" in b:
+            continue
+        if b["kind"] == "bow":
+            assert b["quiver"] > 0 and "charges" not in b, b["name"]
+        else:
+            assert b["kind"] == "wand" and b["charges"] > 0 and b["recharge"] > 0, b["name"]
+    assert {b["slot"] for b in g["base"]} == set(loot.SLOTS)
 
 
 def test_weight_tables_sum_to_256():
@@ -117,10 +143,18 @@ def test_actions_agree_with_the_combat_spec():
     p = os.path.join(os.path.dirname(__file__), "..", "art", "dungeons", "actors", "actions.toml")
     with open(p, "rb") as f:
         act = tomllib.load(f)["action"]
+    with open(p, "rb") as f:
+        assert tomllib.load(f)["arc"]["hold"][:2] == [4, 4]   # 05 §1.1 wind-up, active
     for name, a in act.items():
         assert len(a["hold"]) == a["frames"], name
         assert all(len(v) == a["frames"] for v in a["keys"].values()), name
     assert sum(act["roll"]["hold"]) == 8                  # 05 §1.3
-    assert act["swing"]["hold"][:2] == [4, 4]             # 05 §1.1 wind-up, active
-    streamed = sum(act[k]["frames"] for k in ("idle", "walk", "roll", "hurt", "downed"))
-    assert streamed * 3 == 33                             # 07 §2 / 02 §1.2
+    # RESIDENT heroes (owner 2026-11-16, 02 §1.2): body frames x 3 directions
+    # (left = flip) + the class arcs + shots/drops/pips must fit OBJ name
+    # table 0's 256 tiles. 16x16 = 4 tiles; 8x8 = 1.
+    body = sum(a["frames"] for a in act.values()) * 3 * 4
+    arc = tomllib.load(open(p, "rb"))["arc"]
+    arcs = len(arc["classes"]) * arc["frames"] * len(arc["orientations"]) * 4
+    small = 20 + 8                                        # shots + drops (8x8), HUD pips
+    assert body == 132 and arcs == 72
+    assert body + arcs + small <= 256                     # 02 §1.2's table-0 ledger

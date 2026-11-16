@@ -21,12 +21,14 @@ unique_bonus = 2
 threat_per_floor = 2         # floor_threat = 1 + floor * threat_per_floor (cap 250)
 
 # --- bases -------------------------------------------------------------------
-# id is the record's byte 0. slot: melee|ranged|armor|artifact.
-# dmg/rate/reach are in game units (spec 05 §2); cd = artifact cooldown frames.
+# id is the record's byte 0. slot: primary|ranged|armor|accessory
+# (owner 2026-11-16: four slots, one accessory).
+# dmg/rate/reach are in game units (spec 05 §2); cd = accessory cooldown frames.
 [[base]]
 id = 1
 name = "IRON SWORD"
-slot = "melee"
+slot = "primary"
+swing = "slash"
 dmg = 6
 rate = 20
 reach = 18
@@ -34,7 +36,8 @@ arc = 90
 [[base]]
 id = 2
 name = "SPEAR"
-slot = "melee"
+slot = "primary"
+swing = "thrust"
 dmg = 7
 rate = 24
 reach = 28
@@ -42,7 +45,8 @@ arc = 30
 [[base]]
 id = 3
 name = "MAUL"
-slot = "melee"
+slot = "primary"
+swing = "smash"
 dmg = 14
 rate = 44
 reach = 20
@@ -50,7 +54,8 @@ arc = 140
 [[base]]
 id = 4
 name = "TWIN KNIVES"
-slot = "melee"
+slot = "primary"
+swing = "slash"
 dmg = 3
 rate = 10
 reach = 14
@@ -58,43 +63,54 @@ arc = 70
 [[base]]
 id = 5
 name = "REAPER"
-slot = "melee"
+slot = "primary"
+swing = "slash"
 dmg = 8
 rate = 30
 reach = 22
 arc = 180
+# RANGED (owner 2026-11-16): BOWS carry their own ammo, per player (`quiver`
+# = max arrows; arrows drop INSTANCED to the bow's owner); WANDS never use ammo
+# but each shot spends a CHARGE that refills over time (`charges`, `recharge`
+# frames per charge). No ammo is ever shared between players.
 [[base]]
 id = 16
 name = "SHORTBOW"
 slot = "ranged"
+kind = "bow"
 dmg = 5
 rate = 18
 speed = 4
-ammo = 1
+quiver = 30
 [[base]]
 id = 17
 name = "ARBALEST"
 slot = "ranged"
+kind = "bow"
 dmg = 11
 rate = 40
 speed = 6
-ammo = 1
+quiver = 16
 [[base]]
 id = 18
-name = "SLING"
+name = "FROST WAND"
 slot = "ranged"
-dmg = 3
-rate = 10
-speed = 4
-ammo = 1
+kind = "wand"
+dmg = 4
+rate = 22
+speed = 3
+charges = 4
+recharge = 45
 [[base]]
 id = 19
-name = "EMBER ROD"
+name = "EMBER WAND"
 slot = "ranged"
+kind = "wand"
 dmg = 6
 rate = 26
 speed = 3
-ammo = 0
+charges = 3
+recharge = 60
 [[base]]
 id = 32
 name = "JERKIN"
@@ -127,37 +143,37 @@ cdr = 25
 [[base]]
 id = 48
 name = "BLAST JAR"
-slot = "artifact"
+slot = "accessory"
 cd = 300
 effect = "aoe_throw"
 [[base]]
 id = 49
 name = "MENDING POST"
-slot = "artifact"
+slot = "accessory"
 cd = 900
 effect = "heal_zone"
 [[base]]
 id = 50
 name = "BLINK SASH"
-slot = "artifact"
+slot = "accessory"
 cd = 240
 effect = "phase_dash"
 [[base]]
 id = 51
 name = "HOUND CALL"
-slot = "artifact"
+slot = "accessory"
 cd = 1200
 effect = "summon_ally"
 [[base]]
 id = 52
 name = "QUAKE BELL"
-slot = "artifact"
+slot = "accessory"
 cd = 480
 effect = "stun_ring"
 [[base]]
 id = 53
 name = "SUN LANTERN"
-slot = "artifact"
+slot = "accessory"
 cd = 600
 effect = "light_burst"
 # Uniques: a named variant of a base with one FIXED signature enchant (tier 2)
@@ -165,7 +181,7 @@ effect = "light_burst"
 [[base]]
 id = 64
 name = "DAWNEDGE"
-slot = "melee"
+slot = "primary"
 of = 1
 signature = "EMBER"
 [[base]]
@@ -188,7 +204,7 @@ signature = "BOND"
 # % dmg to others in arc
 id = 1
 name = "CLEAVE"
-slots = ["melee"]
+slots = ["primary"]
 t1 = 30
 t2 = 45
 t3 = 60
@@ -196,7 +212,7 @@ t3 = 60
 # hp per kill
 id = 2
 name = "LEECH"
-slots = ["melee"]
+slots = ["primary"]
 t1 = 2
 t2 = 3
 t3 = 5
@@ -204,7 +220,7 @@ t3 = 5
 # burn dmg/sec, 3 s
 id = 3
 name = "EMBER"
-slots = ["melee", "ranged"]
+slots = ["primary", "ranged"]
 t1 = 1
 t2 = 2
 t3 = 3
@@ -212,7 +228,7 @@ t3 = 3
 # % slow, 2 s
 id = 4
 name = "FROST"
-slots = ["melee", "ranged"]
+slots = ["primary", "ranged"]
 t1 = 20
 t2 = 30
 t3 = 40
@@ -220,7 +236,7 @@ t3 = 40
 # % faster swing
 id = 5
 name = "FLURRY"
-slots = ["melee"]
+slots = ["primary"]
 t1 = 10
 t2 = 20
 t3 = 30
@@ -228,7 +244,7 @@ t3 = 30
 # % chance of a repeat hit
 id = 6
 name = "ECHO"
-slots = ["melee"]
+slots = ["primary"]
 t1 = 15
 t2 = 25
 t3 = 35
@@ -236,7 +252,7 @@ t3 = 35
 # % vs elite/boss
 id = 7
 name = "TITANBANE"
-slots = ["melee", "ranged"]
+slots = ["primary", "ranged"]
 t1 = 25
 t2 = 50
 t3 = 75
@@ -244,7 +260,7 @@ t3 = 75
 # knockback px
 id = 8
 name = "SHOVE"
-slots = ["melee"]
+slots = ["primary"]
 t1 = 8
 t2 = 12
 t3 = 16
@@ -281,9 +297,9 @@ t1 = 1
 t2 = 2
 t3 = 3
 [[enchant]]
-# % faster ammo regen
+# bow: % larger quiver; wand: % faster recharge
 id = 13
-name = "QUIVER"
+name = "PLENTY"
 slots = ["ranged"]
 t1 = 25
 t2 = 50
@@ -313,7 +329,7 @@ t1 = 1
 t2 = 2
 t3 = 3
 [[enchant]]
-# % artifact cooldown cut
+# % accessory cooldown cut
 id = 19
 name = "FOCUS"
 slots = ["armor"]
@@ -356,8 +372,11 @@ t3 = 70
 # --- drops -------------------------------------------------------------------
 [drops]
 # chance out of 256 that a kill drops GEAR, by enemy class; consumables separate.
+# EVERY drop is INSTANCED per player (owner 2026-11-16: no shared ammo): gear,
+# arrows (only for a player holding a bow), potion refills and sparks are each
+# rolled per player and tinted in that player's palette.
 gear_by_class = { grunt = 10, ranged = 12, brute = 28, elite = 128, boss = 256 }
 consumable_by_class = { grunt = 40, ranged = 40, brute = 64, elite = 128, boss = 256 }
 chest_items = 2              # gear items per chest (one per player in co-op)
 boss_items_per_player = 1    # guaranteed, rarity floor = rare
-slot_weights = { melee = 72, ranged = 64, armor = 72, artifact = 48 }   # sums to 256
+slot_weights = { primary = 72, ranged = 64, armor = 72, accessory = 48 }   # sums to 256

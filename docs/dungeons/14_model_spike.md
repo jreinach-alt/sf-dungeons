@@ -5,7 +5,10 @@
 > of Blender as a 16×16 SNES sprite that reads, holds its feet still, and
 > fits the palette-role contract? This is the gap 13 names: sf-gt's pipeline
 > only ever rendered rigid cars.
-> **Scope:** the wanderer, `walk` only, all 3 directions, plus `idle`. No
+> **Scope:** the wanderer, `walk` only, all 3 directions, plus `idle`. The
+> heroes are **resident** in OBJ name table 0, not streamed (owner,
+> 2026-11-16; 02 §1.2), so every frame counts against a 256-tile ledger that
+> `tests/test_dungeons_model.py` enforces. No
 > ROM work, no converter. Those come after the spike's verdict.
 
 ## 0. What is already in this repo for you
@@ -28,7 +31,7 @@
 1. **Toolchain.** Blender 4.2 LTS at `~/toolchains/blender/blender`, or set
    `BLENDER`. Check with `$BLENDER -b --factory-startup --version`. Also run
    `python3 -m pytest tests/test_dungeons_pixelate.py tests/test_dungeons_model.py -q`,
-   which should print 120 passed.
+   which should print 122 passed.
 2. **Smoke.** Run `art/dungeons/build_all.sh smoke`. Expect `PASS` and
    `build/dgn_art_work/smoke_sprite_x8.png`, then look at it.
    - If it fails, fix `blender_common.py` against sf-gt's originals and
@@ -99,6 +102,9 @@ Answer each question with evidence: frame images, the metric table, timings.
 2. Do the feet hold still, with an anchor drift of 0?
 3. Does the cloak skin cleanly, or does it need a rigid-segment fallback?
 4. What is the render cost per frame, so the full roster can be
-   extrapolated? 13 §3 implies about 33 hero frames plus swings × 5 bases.
+   extrapolated? The resident roster (02 §1.2) is 33 hero body frames plus
+   18 swing-arc frames, then the enemies and the boss poses.
 5. **Go / adjust / no-go** for script-built animated figures, and if
    "adjust", what changes in 11 / 13.
+6. **Q5 (09):** does a 16×16 resident hero read well enough, or does the
+   game want 32×32 (which would bring streaming back)? Show both if in doubt.

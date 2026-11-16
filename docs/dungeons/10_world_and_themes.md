@@ -34,7 +34,7 @@ Why this premise fits the game:
 | floors are "remembered" anew every time | procedural generation is in-fiction: no two floors are the same |
 | gear is "what you carried back out of a memory" | loot defines the hero, and there is no class |
 | the Unwriting at the edges | the generator's `void` cells already *are* the unwritten: black outside the rooms. Tier S makes it advance (§4) |
-| two wanderers, one lantern | couch co-op, the revive loop, and the SUN LANTERN artifact |
+| two wanderers, one lantern | couch co-op, the revive loop, the Bond meter's Lantern Surge, and the SUN LANTERN accessory |
 
 ## 2. The look: "80s matte painting on a 16-bit screen"
 
@@ -55,10 +55,10 @@ dusty and luminous at once. Translated to the SNES:
   - a cell whose floor is a giant's hand.
   - Each is a hand-authored 16×16-metatile template drawn as one large
     prerendered image (11 §3).
-- **The book frame.** Menus, the descend card and the results screen are
+- **The book frame.** Menus, the map's embark card and the results screen are
   pages of an old illuminated book: parchment BG, a drop-cap glyph and an
   ink-line border. (Illuminated manuscripts are a public tradition, not the
-  film's.) The descend card's page turns via the `mosaic` edge.
+  film's.) The embark card's page turns via the `mosaic` edge.
 
 ## 3. Biomes (tier M ships 1, tier S 2, tier C 3)
 
@@ -83,7 +83,8 @@ key.
     frame through the cell queue.
   - Whatever is inside is lost, chests included.
 - This is pressure without a timer UI. It rewards the co-op pair splitting up
-  across a branch (06 §2 lets them, within the leash).
+  across a branch, and split screen (06 §2) lets them. While they are split the
+  Fray doubles its pace (06 §3 rule 6).
 - Visual: one metatile kind with a 4-frame white → black palette ramp, plus
   the colour-math fixed colour pulsing toward white on the frame a cell goes.
 - **Determinism:** which cells go and in what order is drawn from GEN at

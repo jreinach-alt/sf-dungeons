@@ -20,18 +20,20 @@ mystery. See 10 and 12.
 
 ## 2. Pillars (in priority order: when two collide, the higher one wins)
 
-1. **Couch co-op first.** Every system is designed for two players sharing one
-   screen. Single player is supported, but it is the case that has to fit the
+1. **Couch co-op first.** Every system is designed for two players on one
+   console. Single player is supported, but it is the case that has to fit the
    two-player design, not the reverse. Concretely:
-   - a shared camera,
-   - instanced gear drops,
-   - a downed/revive loop,
-   - partner-facing gear (BOND, RALLY).
+   - **split screen that merges when the heroes are together** (06 §2)
+   - mechanics that make staying together pay, without forbidding exploration
+     (06 §3)
+   - instanced drops, so nothing is ever shared or fought over, ammo included
+   - a downed/revive loop
+   - partner-facing gear (BOND, RALLY)
 2. **Gear is the build.** No class, no skill tree.
-   - A player's playstyle is entirely their five equipped items: melee, ranged,
-     armor and two artifacts.
-   - Swapping is free and instant at a camp, and allowed mid-floor from the
-     pause screen.
+   - A player's playstyle is entirely their four equipped items: **primary,
+     ranged, armor, accessory** (owner, 2026-11-16).
+   - Swapping is free, live and per player, at any time, through Select. There
+     is no menu screen (06 §4).
 3. **Every floor is new, every floor is fair.** Floors are stitched from
    hand-authored rooms along a generated critical path. Pure noise is not used.
    - Every floor is provably completable: the generator's oracle checks
@@ -48,43 +50,46 @@ mystery. See 10 and 12.
 ## 3. The core loop
 
 ```
- CAMP (hub)  ── pick floor depth ──►  FLOOR n (generated)  ── boss ──►  REWARD
-    ▲   equip / salvage / upgrade          │  rooms: fight packs, chests,     │
-    │                                      │  optional treasure branches      │
-    └──────────── return (or descend) ◄────┴── both downed: lose a life ◄─────┘
+ CAMP (hub) ⇄ MAP (level select) ──► LEVEL (generated floor) ──► boss ──► RESULTS ──► CAMP
+   salvage, stash,    pick a location:          rooms: packs, chests,
+   the lamplighter    biome + threat band       treasure branches
 ```
 
-- **One floor** is a playable target of 5 to 10 minutes: 5 to 9 path rooms,
-  0 to 2 treasure branches and 1 boss room (03 §3).
-- **One run** is an "expedition": floors 1, 2, 3 and so on until the party
-  returns or runs out of lives. Depth raises the threat (04 §3), which raises
-  drop power.
-- **Persistence:** the camp stash plus each player's equipped set, saved to
-  battery-backed SRAM (02 §2.1). This is not a jam entry, so the jam's no-SRAM
-  rule does not apply (owner, 2026-11-16).
+- **One level** is one generated floor of a map location, a playable target
+  of 5 to 10 minutes: 5 to 9 path rooms, 0 to 2 treasure branches and 1 boss
+  room (03 §3). After each level the party returns to camp (owner,
+  2026-11-16).
+- **The map** unlocks locations as levels are cleared. A cleared location
+  stays replayable with a fresh seed, for loot. A location's threat band sets
+  the level's threat (04 §3).
+- **Difficulty (later, not the first build):** Normal / Hard / Epic raise the
+  strength and number of spawns (04 §3.1, owner 2026-11-16).
+- **Persistence:** each player's equipped kit and backpack plus the camp
+  stash and map progress, saved to battery-backed SRAM (02 §2.1).
 
 ## 4. The controls (both pads identical)
 
 | button | action | notes |
 |---|---|---|
 | D-pad | move (8-way) | facing = last nonzero direction |
-| B | melee | hold = repeat at weapon rate |
-| Y | ranged | consumes shared ammo; EMBER ROD needs no ammo |
-| A | dodge roll | 12 frames of invulnerability, then a cooldown (05 §2.4) |
+| B | primary attack | hold = repeat at the weapon's rate |
+| Y | ranged | bows spend **your own** arrows; wands spend a charge that refills over time. Nothing is shared (04 §2.1) |
+| A | dodge roll | 12 frames of invulnerability, then a cooldown (05 §1.3) |
 | X | potion | heals 60% of max HP, 45 s cooldown, per player |
-| L / R | artifact 1 / 2 | each has its own cooldown |
-| Start | pause and inventory | pauses both players |
-| Select | ping | puts a marker above your hero (a 2-frame cue); costs nothing |
+| R | accessory | its own cooldown |
+| L | **Lantern Surge** | with both players pressing within 30 frames, while merged and with the Bond meter full (06 §3) |
+| Select | **gear** | tap: next slot. Hold + Up/Down: cycle items. Hold + Right/Left: add or remove a spark (06 §4) |
+| Start | pause | pauses both players (options, leave the level) |
 
-All eight buttons are spoken for. That is deliberate: it caps the equipped kit
-at two artifacts rather than three. The researched design implications agree
-(research §Implications 1).
+All eight buttons are spoken for. That is deliberate: it is why the kit is
+four slots with one accessory, and why gear lives on Select instead of on a
+menu screen.
 
 ## 5. Scope ladder (cut from the bottom)
 
 | tier | contents | must ship? |
 |---|---|---|
-| **M (minimum)** | 1 biome (the Hollow Wood, 10 §3) tileset, 13 room templates (already authored), 4 enemy types, 1 boss, 22 item bases, 21 enchants, camp, save | yes |
-| **S (should)** | 2nd biome (palette swap plus 8 templates), elites, enchant upgrades at camp, ping, music per biome | next |
-| **C (could)** | 3rd biome, a 2nd boss, darkness floors lit by SUN LANTERN (the `window_iris` lantern), daily seed | later |
-| **W (won't)** | online, more than 2 players, a 3rd artifact slot, procedural music | — |
+| **M (minimum)** | split screen with merge, live gear swapping, 1 biome (the Hollow Wood, 10 §3), 13 room templates (already authored), 4 enemy types, 1 boss, 22 item bases, 21 enchants, camp, map with 3 locations, save, Kindred + Bond/Lantern Surge + shared finds + the boss gate (06 §3 rules 1–4, 7–8) | yes |
+| **S (should)** | 2nd biome (palette swap plus 8 templates), elites, twin seals and the Fray (06 §3 rules 5–6), music per biome, the Voronoi seam if M shipped the vertical fallback | next |
+| **C (could)** | 3rd biome, a 2nd boss, Normal/Hard/Epic difficulty, darkness levels lit by SUN LANTERN, daily seed | later |
+| **W (won't)** | online, more than 2 players, more equipment slots, shared ammo, procedural music | — |
