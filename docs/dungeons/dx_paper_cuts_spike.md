@@ -142,8 +142,18 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
   built. I reported that as missing tooling, and the owner rightly pushed
   back, because the SuperForge GT work builds on this box. *Fix:* a
   SessionStart hook in the git-ignored `.claude/settings.local.json` now
-  prepends both directories via `$CLAUDE_ENV_FILE`. Search the disk
+  prepends cc65 and a Python venv via `$CLAUDE_ENV_FILE`. Search the disk
   (`find / -xdev -name ca65`) before claiming a tool is absent.
+- **surprise / MEDIUM — the borrowed venv lacks PyYAML, and the suite needs
+  it.** With `~/SuperForge/.venv` first on PATH, the landing gate built
+  every ROM and passed all 63 gates, but the suite ended with 4 failed and
+  2,746 passed, all in `test_batch_union.py` (`No module named 'yaml'`).
+  The system python3 has PyYAML but no pytest, and that venv has pytest but
+  no PyYAML. `tools/setup.sh` checks only Pillow, pytest and xdist, so it
+  never notices. *Fix:* a project venv at `~/toolchains/sf-dungeons-venv`,
+  pinned to the same versions plus PyYAML 6.0.1, so the shared SuperForge
+  venv is untouched. 38 of 38 `test_batch_union.py` tests pass under it.
+  *Fix for the kit:* `setup.sh` should check for PyYAML too.
 - **surprise / MEDIUM — import order segfaults the test collection.**
   `vendor/mesen_runner.py` dlopens MesenCore.so at import, and its own comment
   says it must do so before numpy's bundled libraries load. A test module
