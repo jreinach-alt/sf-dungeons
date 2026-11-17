@@ -34,6 +34,14 @@ follows the shape of sf-gt's `docs/fgt/HANDOFF.md`.
   exist yet, and 08 M0 creates it. `tools/gen_dgn_hero_assets.py` is the
   first slice of 11 §5 stage 6 that M3's converter grows from.
 
+## 2.1 The art-direction spike (2026-11-17), awaiting the owner
+
+14's sprites met the technical bar and not the vision. `docs/dungeons/15` has
+three treatments (A storybook, B practical-effects, C painted 16-bit) built over
+a new painterly stage, judged in a mock Hollow Wood room. **Do not start the
+character system, or change 11 / 13, until the owner chooses (15 §9).**
+Run it: `art/dungeons/style/build_style.sh`.
+
 ## 3. Next, in order
 
 1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,

@@ -1,0 +1,99 @@
+# A — Storybook Wanderer: restrained, atmospheric, human-like. About four heads
+# tall, a large pleated cloak, a hood that keeps its face, dusty low-saturation
+# colour, soft banded shading, outlines that are never black.
+name = "_probe"
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 30
+supersample = 8
+margin_px = 4
+box = [16, 32]
+anchor = [10, 27.6]
+attack_box = [32, 32]
+attack_anchor = [16, 27.6]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.45, 0.55, -0.70]
+
+[model]
+cloak_hem = [0.195, 0.185]
+cloak_top = [0.145, 0.12]
+shoulder_w = 0.128
+hood_peak = 0.11
+hood_droop = 0.19
+arm_r = 0.037
+sword_len = 0.32
+sword_w = 0.05
+
+# ---- painter rules --------------------------------------------------------------
+[paint]
+cover = 0.45
+smooth = 0.65
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["skin", "metal", "glow", "detail"]
+
+[ramp.cloak]
+thresholds = [0.20, 0.40, 0.60, 0.82]
+[ramp.leather]
+thresholds = [0.48]
+[ramp.skin]
+thresholds = [0.50]
+[ramp.trim]
+thresholds = [0.52]
+
+# ---- hand-authored stamps: [dx, dy, palette index] from the projected locator ----
+[stamp]
+face_down = [[-1, 0, 9], [1, 0, 9]]
+face_right = [[1, 0, 9]]
+lantern = [[0, 0, 12], [0, 1, 12]]
+sword_tip = [[0, 0, 12]]
+
+# ---- palette: 15 colours, indices 1-15 (0 is transparent) --------------------------
+# 1-5 cloak ramp, 6-7 trim, 8-9 skin (face void / lit), 10-11 leather, 12 lantern
+# glow, 13 steel, 14 deep detail, 15 outline. P1 / P2 differ in 1-7 only.
+[palette]
+p1 = ["#1f1d3a", "#323a68", "#4a5c92", "#6f86b4", "#a7b6d4",
+      "#8d93a8", "#cfd3dc",
+      "#3a2a2e", "#b08468",
+      "#4a3022", "#7a5638",
+      "#f2b04a", "#9aa7a6", "#26202a", "#15121c"]
+p2 = ["#3a1c1a", "#6b3418", "#9a5a20", "#c98a3a", "#ecc27a",
+      "#8a4a2c", "#d68a56",
+      "#3a2a2e", "#b08468",
+      "#4a3022", "#7a5638",
+      "#f2b04a", "#9aa7a6", "#26202a", "#15121c"]
+
+[action.attack]
+frames = 6
+hold = [4,4,4,4,4,4]
+[action.attack.keys]
+"upperarm.R.pitch" = [0, 0, 0, 0, 0, 0]
+"forearm.R.pitch" = [-8, -8, -8, -8, -8, -8]
+"weapon.pitch" = [0, 0, 0, 0, 0, 0]
+"spine.pitch" = [0, 0, 0, 0, 0, 0]
+"spine.yaw" = [0, 0, 0, 0, 0, 0]
+"upperarm.L.pitch" = [0, 0, 0, 0, 0, 0]
+"thigh.L.pitch" = [0, 0, 0, 0, 0, 0]
+"thigh.R.pitch" = [0, 0, 0, 0, 0, 0]
+"shin.L.pitch" = [0, 0, 0, 0, 0, 0]
+"shin.R.pitch" = [0, 0, 0, 0, 0, 0]
+"hips.z" = [0, 0, 0, 0, 0, 0]
+"cloak.1.pitch" = [0, 0, 0, 0, 0, 0]
+"head.pitch" = [0, 0, 0, 0, 0, 0]
+[action.attack.dir.down]
+"upperarm.R.roll" = [125, 80, 80, 55, 100, 30]
+"weapon.roll" = [40, -10, -50, -60, -90, -20]
+"upperarm.R.pitch" = [0, 0, 0, 0, 0, 0]
+"forearm.R.pitch" = [-8, -8, -8, -8, -8, -8]
+"weapon.pitch" = [0, 0, 0, 0, 0, 0]
+"spine.pitch" = [0, 0, 0, 0, 0, 0]
+"spine.yaw" = [0, 0, 0, 0, 0, 0]
+"thigh.L.pitch" = [0, 0, 0, 0, 0, 0]
+"thigh.R.pitch" = [0, 0, 0, 0, 0, 0]

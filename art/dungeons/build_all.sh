@@ -51,6 +51,7 @@ case "$stage" in
   render) render ;;
   pixelate) pixelate ;;
   sheets) sheets ;;
+  style) bash art/dungeons/style/build_style.sh "${@:2}" ;;     # the art-direction spike (docs/dungeons/15)
   all) render; pixelate; sheets ;;
   *)
     echo "build_all.sh: stage '$stage' is not written yet (docs/dungeons/14)" >&2

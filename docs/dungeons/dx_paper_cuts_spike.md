@@ -198,3 +198,43 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
   `camera.box`.
 - **easy / LOW — a tall box is two OBJs, and that is cheap.** See 14 §6.2:
   OAM slots, not scanline budget.
+
+## The art-direction spike (2026-11-17)
+
+- **surprise / HIGH — an acceptance criterion hid in context.** "Distinct from
+  scenery and enemies" cannot be judged on a sheet. On a grey sheet all three
+  treatments looked fine; in the room, B's teal vanished into moss and P2's amber
+  was the same hue as the floor's bark and the Rootling. Three palette fixes
+  followed. *Fix:* judge every treatment in its own biome before anything else.
+- **surprise / MEDIUM — a stamp hid inside what it was placed on.** The face
+  glints were drawn with the hood rim's own palette index on the rim's own row, so
+  they were invisible and I judged "no eyes" for two rounds. An index dump
+  (`print the rows as hex`) found it in one look. *Fix:* the stamps now sit a
+  row down in the void, and when a detail "is missing" dump the indices before
+  re-tuning anything.
+- **surprise / MEDIUM — my first planted defect was not caught.** Disabling the
+  cluster passes left every test green, because the shading blur (and the
+  bridge-line rule) folded the orphan pixel anyway. The test now runs with
+  smoothing off so the cluster stage is the only defence, and the plant is the
+  stage's call site. A test that survives its own plant is not a test.
+- **clunky / MEDIUM — 16 px is tight, and refuse-never-crop kept refusing.**
+  About a dozen times a pleat, a satchel, a stride or a sword's wind-up put one pixel
+  outside the box. Each refusal named the pixel, and the fixes were data
+  (anchor x, a radius, a key). *Fix for the pipeline:* `render_style.py` could
+  print the figure's bounding box per frame so the anchor is chosen once.
+- **clunky / MEDIUM — joint signs are found by probing, not reasoning.** The
+  front-view slash needed `roll`, not `pitch` (a pitch swing foreshortens toward
+  the camera), and the signs came from rendering six candidate poses in one
+  go (a 6-frame probe style, `styles/_probe.toml`). *Fix:* keep the probe as a
+  tool; it cost one render where guessing cost four.
+- **easy / LOW — `set_actor_camera` overwrites the resolution**, so an inspect
+  render set earlier came out at the sprite size. Set it after the camera.
+- **easy / LOW — the safety check blocked `rm -f $W/*.png`** (an unset `$W` would
+  expand to `/`). The deletion was unnecessary: renders overwrite their
+  outputs. If one is ever needed, `"${W:?}"/*.png` is the form it accepts.
+- **easy / LOW — the pipeline is fast enough to iterate:** three treatments, 18
+  frames each, rendered, painted, composed into rooms and animated in 20 s; one
+  Blender frame is about 0.15 s.
+- **easy / LOW — the same data-pass contract carried a very different style.**
+  Nothing in `blender_common`, the compositor or `pixelate_actor.fit` changed for
+  the painter: the look lives entirely in the stage after the render.

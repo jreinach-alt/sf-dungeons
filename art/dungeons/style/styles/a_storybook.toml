@@ -1,0 +1,99 @@
+# A — Storybook Wanderer: restrained, atmospheric, human-like. About four heads
+# tall, a large pleated cloak, a hood that keeps its face, dusty low-saturation
+# colour, soft banded shading, outlines that are never black.
+name = "a_storybook"
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 30
+supersample = 8
+margin_px = 4
+box = [16, 32]
+anchor = [10, 27.6]
+attack_box = [32, 32]
+attack_anchor = [16, 27.6]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.55, 0.45, -0.52]
+
+[model]
+cloak_hem = [0.195, 0.185]
+cloak_top = [0.145, 0.12]
+shoulder_w = 0.128
+arm_r = 0.037
+hood_peak = 0.11
+hood_droop = 0.19
+hood_open_w = 0.060
+face_back = 0.05
+edge_trim = 2
+sword_len = 0.32
+sword_w = 0.068
+
+# ---- painter rules --------------------------------------------------------------
+[paint]
+cover = 0.45
+smooth = 0.65
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["skin", "metal", "glow", "detail"]
+
+[ramp.cloak]
+thresholds = [0.27, 0.48, 0.68, 0.90]
+[ramp.leather]
+thresholds = [0.48]
+[ramp.skin]
+thresholds = [0.50]
+[ramp.trim]
+thresholds = [0.52]
+
+# ---- hand-authored stamps: [dx, dy, palette index] from the projected locator ----
+[stamp]
+face_down = [[-2, 2, 7], [1, 2, 7]]
+lantern = [[0, 0, 12], [0, 1, 12]]
+sword_tip = [[0, 0, 12]]
+
+# ---- palette: 15 colours, indices 1-15 (0 is transparent) --------------------------
+# 1-5 cloak ramp, 6-7 trim, 8-9 skin (face void / lit), 10-11 leather, 12 lantern
+# glow, 13 steel, 14 deep detail, 15 outline. P1 / P2 differ in 1-7 only.
+[palette]
+p1 = ["#26233f", "#3d4670", "#5f729c", "#8fa1bf", "#d6d6de",
+      "#8c93a4", "#d9dce4",
+      "#34262c", "#b98f72",
+      "#4a3226", "#82603f",
+      "#f4b552", "#9fb0a8", "#221d28", "#16121e"]
+p2 = ["#3e1f18", "#7e4a1c", "#c48a28", "#eab44a", "#fff0b4",
+      "#98502c", "#ec9c5c",
+      "#34262c", "#b98f72",
+      "#4a3226", "#82603f",
+      "#f4b552", "#9fb0a8", "#221d28", "#16121e"]
+
+# ---- motion overrides (this style's cloak trails less: 16 px is tight) -----------
+[action.walk.keys]
+"thigh.L.pitch" = [24, 0, -24, 0]
+"thigh.R.pitch" = [-24, 0, 24, 0]
+"hips.z" = [-0.042, 0.0, -0.042, 0.0]
+"cloak.1.pitch" = [13, 7, 13, 7]
+[action.attack.keys]
+"upperarm.R.pitch" = [138, -70, -35]
+"cloak.1.pitch" = [-4, 16, 9]
+
+[action.attack.dir.down]
+"upperarm.R.roll" = [112, 80, 45]
+"weapon.pitch" = [0, 0, 0]
+"weapon.roll" = [40, -10, -35]
+"forearm.R.pitch" = [-10, -5, -4]
+
+# ---- the hand-cleanup layer: pixels a person chose, [x, y, index] in box coords -----
+# idle_down_0 / boots: two distinct boots (a dark gap between them), the lit left edge
+# of each one step lighter, dark soles to ground the figure. 10/11 leather, 14 detail,
+# 15 outline.
+[override.idle_down_0]
+px = [[6,26,11],[7,26,11],[8,26,10],[9,26,10],[10,26,15],[11,26,11],[12,26,11],[13,26,10],
+      [6,27,11],[7,27,11],[8,27,10],[9,27,10],[10,27,15],[11,27,11],[12,27,10],[13,27,10],
+      [6,28,10],[7,28,10],[8,28,10],[9,28,10],[10,28,15],[11,28,10],[12,28,10],[13,28,10],
+      [7,29,14],[8,29,14],[9,29,14],[10,29,15],[11,29,14],[12,29,14],[13,29,14]]

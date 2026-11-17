@@ -29,6 +29,7 @@
 | [12 — Music and sound](12_music_and_sound.md) | 80s orchestral in three colours, adaptive layers on TAD's channel mask, the synthesised orchestra, the cue sheet |
 | [13 — Character pipeline](13_character_pipeline.md) | animated figures: the rig and actions as data, the ported pixelate stage (tested without Blender), the `bpy` script to write, acceptance metrics, and where Elyum helps (references only) |
 | [14 — The model spike](14_model_spike.md) | the local, Blender-driven proof that an animated figure comes out as a 16×16 sprite that reads. **Ran 2026-11-15: GO, with adjustments (§6)**; friction in [dx_paper_cuts_spike](dx_paper_cuts_spike.md) |
+| [15 — The art-direction spike](15_art_direction_spike.md) | **for sign-off:** three visual treatments of the wanderer (storybook, practical-effects, painted 16-bit) through a painterly stage, judged in a mock Hollow Wood room and on a CRT preview, with a recommendation |
 | [HANDOFF](HANDOFF.md) | where everything is, what is verified, and what is next |
 | [research/genre_reference.md](research/genre_reference.md) | what the genre reference and its precedents do (the evidence behind 01–06) |
 | [research/kit_capabilities.md](research/kit_capabilities.md) | what this kit already proves, game by game (Proven / Near / New) |

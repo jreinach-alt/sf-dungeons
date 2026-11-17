@@ -21,5 +21,6 @@ Ported from sf-gt's `art/fgt/cars/`.
 | `actors/pose_data.py` | Python | the `actions.toml` channel semantics (lag, per-direction tables) and their checker, with no Blender |
 | `actors/pixelate_frames.py` | Python | the pixelate stage: raw frames → `frames/<model>_<action>_<dir>.png` |
 | `actors/sheets.py` | Python | the sheets stage: `sheet_<model>.png`, `anchors.json`, `metrics.json` (13 §4) |
+| `style/` | Blender + Python | the art-direction spike (docs/dungeons/15): `render_style.py` (the parameterised authoring model, Blender), `paint.py` (the painterly stage and the hand-cleanup layer), `styles/*.toml` (a treatment is a data file), `room.py` / `scene.py` (a mock Hollow Wood room, native and CRT preview), `anim.py` / `boards.py` / `view.py` / `compare.py` (review images), `build_style.sh` (all of it, 20 s). Outputs in `style/out/` |
 | `actors/frames/` | tracked | the indexed 16x32 strips (index 0 transparent): the converter's input |
 | `actors/archive_16x16/` | tracked | the first spike's 16x16 set, sheet, metrics and TOML, kept for comparison (`compare_16x16_vs_16x32.png`) |

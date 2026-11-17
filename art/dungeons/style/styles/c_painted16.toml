@@ -1,0 +1,99 @@
+# C — Painted 16-Bit Adventurer: traditional SNES sprite craft with storybook
+# colouring. A rounded hood and a bigger head (about 3.5 heads), simple chunky
+# forms, big flat colour shapes with clean clusters, a violet-to-cyan hue shift
+# (cool violet shadows, pale cyan lights), and the hood face the player is used to.
+name = "c_painted16"
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 30
+supersample = 8
+margin_px = 4
+box = [16, 32]
+anchor = [9, 27.6]
+attack_box = [32, 32]
+attack_anchor = [16, 27.6]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.45, 0.55, -0.70]
+
+[model]
+cloak_hem = [0.19, 0.18]
+cloak_top = [0.15, 0.125]
+shoulder_w = 0.13
+arm_r = 0.040
+hood_r = 1.20
+hood_peak = 0.0
+hood_open_w = 0.085
+hood_open_z = [0.795, 0.925]
+face_back = 0.0
+mantle = 0.165
+pleats = 5
+pleat_amp = 0.05
+jag = 0.02
+jag_n = 8
+asym = 0.012
+satchel = 1.10
+lantern = 1.25
+boot_scale = 1.12
+skew = 0.006
+edge_trim = 3
+sword_len = 0.32
+sword_w = 0.068
+
+# ---- painter rules --------------------------------------------------------------
+[paint]
+cover = 0.5
+smooth = 0.85
+cluster_passes = 4
+rim = 1
+contact = true
+lit_soft = false
+shadow = "dither"
+no_rim = ["skin", "metal", "glow", "detail"]
+outline = { cloak = 1, trim = 1, leather = 10 }
+[ramp.cloak]
+thresholds = [0.30, 0.55, 0.80, 1.05]
+[ramp.leather]
+thresholds = [0.52]
+[ramp.skin]
+thresholds = [0.48]
+[ramp.trim]
+thresholds = [0.55]
+# ---- hand-authored stamps: [dx, dy, palette index] from the projected locator ----
+[stamp]
+face_down = [[-2, 1, 7], [1, 1, 7]]
+lantern = [[0, 0, 12], [0, 1, 12]]
+sword_tip = [[0, 0, 12]]
+# ---- palette: 15 colours, indices 1-15 (0 is transparent) --------------------------
+# 1-5 cloak ramp, 6-7 trim, 8-9 skin (face void / lit), 10-11 leather, 12 lantern
+# glow, 13 steel, 14 deep detail, 15 outline. P1 / P2 differ in 1-7 only.
+[palette]
+p1 = ["#1e1a4a", "#403a8c", "#5a74c0", "#8cb0e0", "#d6f0f6",
+      "#8a90b8", "#e6e8f6",
+      "#3a2430", "#d8a27c",
+      "#4a2a2a", "#8c5434",
+      "#ffd262", "#aab6ba", "#261a34", "#120c26"]
+p2 = ["#401410", "#82300e", "#c8641a", "#f4a02c", "#fff0a0",
+      "#7c3c26", "#f09c5a",
+      "#3a2430", "#d8a27c",
+      "#4a2a2a", "#8c5434",
+      "#ffd262", "#aab6ba", "#261a34", "#120c26"]
+
+# ---- motion overrides (this style's cloak trails less: 16 px is tight) -----------
+[action.walk.keys]
+"thigh.L.pitch" = [24, 0, -24, 0]
+"thigh.R.pitch" = [-24, 0, 24, 0]
+"hips.z" = [-0.042, 0.0, -0.042, 0.0]
+"cloak.1.pitch" = [13, 7, 13, 7]
+[action.attack.keys]
+"upperarm.R.pitch" = [138, -70, -35]
+"cloak.1.pitch" = [-4, 16, 9]
+
+[action.attack.dir.down]
+"upperarm.R.roll" = [112, 80, 45]
+"weapon.pitch" = [0, 0, 0]
+"weapon.roll" = [40, -10, -35]
+"forearm.R.pitch" = [-10, -5, -4]

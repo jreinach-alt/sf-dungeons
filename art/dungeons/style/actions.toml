@@ -1,0 +1,72 @@
+# actions.toml — the style spike's shared motion: idle, walk, attack (the iron
+# sword, docs/dungeons/05 §1.1: wind-up 4 f, active 4 f, recovery). Channel
+# semantics are kit.py's (pitch / roll about the model's side / facing axes,
+# plus `yaw` about z, added here, and `z` in world units). A style may override
+# any channel in its own [action.*] tables. Directions: right (side) and down
+# (front) are the two this spike shows; `dir.<d>` replaces channels per facing.
+# cloak.* channels lag one sample (pose_data).
+
+[action.idle]
+frames = 2
+hold = [30, 30]
+[action.idle.keys]
+"spine.pitch" = [0.0, 2.5]
+"head.pitch" = [0.0, 2.0]
+"cloak.1.pitch" = [0.0, 5.0]
+"hips.z" = [0.0, -0.008]
+"upperarm.L.pitch" = [0.0, 2.0]
+"upperarm.R.pitch" = [0.0, -2.0]
+
+[action.walk]
+frames = 4
+hold = [8, 8, 8, 8]
+grounded = [0, 2]
+[action.walk.keys]
+"thigh.L.pitch" = [28, 0, -28, 0]
+"thigh.R.pitch" = [-28, 0, 28, 0]
+"shin.L.pitch" = [0, 40, 10, 0]
+"shin.R.pitch" = [10, 0, 0, 40]
+"upperarm.L.pitch" = [-22, 0, 22, 0]
+"upperarm.R.pitch" = [22, 0, -22, 0]
+"forearm.L.pitch" = [-10, -4, -4, -4]
+"hips.z" = [-0.05, 0.0, -0.05, 0.0]
+"cloak.1.pitch" = [20, 11, 20, 11]
+"spine.pitch" = [3, 0, 3, 0]
+[action.walk.dir.down]
+"thigh.L.pitch" = [5, 0, -5, 0]
+"thigh.R.pitch" = [-5, 0, 5, 0]
+"shin.L.pitch" = [0, 55, 10, 0]
+"shin.R.pitch" = [10, 0, 0, 55]
+"upperarm.L.pitch" = [-8, 0, 8, 0]
+"upperarm.R.pitch" = [8, 0, -8, 0]
+"spine.roll" = [0, 8, 0, -8]
+"hips.z" = [0.0, 0.0, 0.0, 0.0]
+"cloak.1.pitch" = [8, 3, 8, 3]
+
+[action.attack]
+frames = 3
+hold = [4, 4, 6]
+sword = "drawn"             # the render shows the drawn sword; the back hilt is hidden
+[action.attack.keys]
+"upperarm.R.pitch" = [150, -70, -35]
+"forearm.R.pitch" = [-35, -8, -4]
+"weapon.pitch" = [-35, -75, -80]
+"upperarm.L.pitch" = [-25, 15, 8]
+"spine.pitch" = [-12, 16, 7]
+"spine.yaw" = [14, -12, -4]
+"hips.z" = [-0.02, -0.05, -0.03]
+"thigh.L.pitch" = [18, -14, -6]
+"thigh.R.pitch" = [-10, 18, 8]
+"shin.L.pitch" = [8, 4, 2]
+"shin.R.pitch" = [14, 8, 4]
+"cloak.1.pitch" = [-6, 24, 12]
+"head.pitch" = [-6, 8, 4]
+[action.attack.dir.down]
+"upperarm.R.pitch" = [0, 0, 0]
+"upperarm.R.roll" = [125, 20, -20]
+"forearm.R.pitch" = [-10, -8, -6]
+"weapon.pitch" = [-20, -70, -70]
+"spine.pitch" = [-4, 8, 4]
+"spine.yaw" = [20, -18, -6]
+"thigh.L.pitch" = [6, -4, -2]
+"thigh.R.pitch" = [-4, 6, 3]

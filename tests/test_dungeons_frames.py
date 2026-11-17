@@ -18,6 +18,13 @@ import os
 import sys
 import tomllib
 
+# FIRST, before numpy/Pillow: vendor/mesen_runner dlopens MesenCore.so on import and must do so
+# before numpy's bundled libraries load, or collection segfaults inside ctypes whenever this
+# module is collected ahead of an emulator test (measured). This module needs no emulator; the
+# import is only what makes it safe to run in any order.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "vendor"))
+import machine  # noqa: F401,E402
+
 import numpy as np
 import pytest
 from PIL import Image

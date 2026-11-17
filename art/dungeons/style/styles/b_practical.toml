@@ -1,0 +1,104 @@
+# B — Practical-Effects Adventurer: slightly exaggerated, tactile, eccentric. A
+# crooked drooping hood, a capelet that hunches the shoulders, an oversized
+# lumpy satchel and lantern on a long hook, a ragged deep-pleated cloak, chunky
+# boots, handmade asymmetry. Teal-shifted shadows, crunchier contrast, heavier
+# rim light: a creature-shop puppet photographed under one practical lamp.
+name = "b_practical"
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 30
+supersample = 8
+margin_px = 4
+box = [16, 32]
+anchor = [9, 27.6]
+attack_box = [32, 32]
+attack_anchor = [16, 27.6]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.72, 0.30, -0.36]
+
+[model]
+cloak_top = [0.165, 0.14]
+cloak_hem = [0.150, 0.150]
+cloak_hem_z = 0.09
+shoulder_w = 0.125
+arm_r = 0.040
+hood_r = 1.08
+hood_peak = 0.20
+hood_droop = 0.20
+hood_tail_x = 0.07
+head_fwd = 0.035
+hood_open_w = 0.055
+hood_open_z = [0.80, 0.91]
+face_back = 0.05
+mantle = 0.205
+pleats = 6
+pleat_amp = 0.14
+jag = 0.075
+jag_n = 6
+asym = 0.06
+satchel = 1.12
+lantern = 1.6
+boot_scale = 1.18
+skew = 0.022
+edge_trim = 1
+sword_len = 0.30
+sword_w = 0.068
+
+# ---- painter rules --------------------------------------------------------------
+[paint]
+cover = 0.45
+smooth = 0.45
+cluster_passes = 2
+rim = 2
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["skin", "metal", "glow", "detail"]
+outline = { cloak = 1, trim = 1, leather = 10 }
+[ramp.cloak]
+thresholds = [0.24, 0.46, 0.68, 0.92]
+[ramp.leather]
+thresholds = [0.46]
+[ramp.skin]
+thresholds = [0.50]
+[ramp.trim]
+thresholds = [0.50]
+# ---- hand-authored stamps: [dx, dy, palette index] from the projected locator ----
+[stamp]
+face_down = [[-1, 2, 7], [0, 2, 7]]
+lantern = [[0, 0, 12], [0, 1, 12], [1, 0, 12]]
+sword_tip = [[0, 0, 12]]
+# ---- palette: 15 colours, indices 1-15 (0 is transparent) --------------------------
+# 1-5 cloak ramp, 6-7 trim, 8-9 skin (face void / lit), 10-11 leather, 12 lantern
+# glow, 13 steel, 14 deep detail, 15 outline. P1 / P2 differ in 1-7 only.
+[palette]
+p1 = ["#0d1a30", "#1d3a6a", "#386ca4", "#6c9ccc", "#cadcee",
+      "#7c8c9c", "#d2dce8",
+      "#2a2028", "#c4916c",
+      "#4a2c1c", "#8a5a36",
+      "#ffc24f", "#8fa09a", "#1a1620", "#0e0c16"]
+p2 = ["#38160e", "#782e14", "#c26c1a", "#f0a238", "#ffe8a2",
+      "#8c4226", "#e8844a",
+      "#2a2028", "#c4916c",
+      "#4a2c1c", "#8a5a36",
+      "#ffc24f", "#8fa09a", "#1a1620", "#0e0c16"]
+
+# ---- motion overrides (this style's cloak trails less: 16 px is tight) -----------
+[action.walk.keys]
+"thigh.L.pitch" = [24, 0, -24, 0]
+"thigh.R.pitch" = [-24, 0, 24, 0]
+"hips.z" = [-0.042, 0.0, -0.042, 0.0]
+"cloak.1.pitch" = [13, 7, 13, 7]
+[action.attack.keys]
+"upperarm.R.pitch" = [138, -70, -35]
+"cloak.1.pitch" = [-4, 16, 9]
+
+[action.attack.dir.down]
+"upperarm.R.roll" = [112, 80, 45]
+"weapon.pitch" = [0, 0, 0]
+"weapon.roll" = [40, -10, -35]
+"forearm.R.pitch" = [-10, -5, -4]
