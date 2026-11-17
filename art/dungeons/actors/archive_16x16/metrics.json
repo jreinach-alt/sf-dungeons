@@ -1,0 +1,205 @@
+{
+ "thresholds": {
+  "drift_max": 0,
+  "agree_tol": 0,
+  "shimmer": [
+   6,
+   30
+  ],
+  "leg_rows": 4,
+  "walk_frame_min": 20,
+  "walk_leg_min": {
+   "right": 12,
+   "down": 8,
+   "up": null
+  }
+ },
+ "per_action": [
+  {
+   "action": "idle",
+   "dir": "right",
+   "foot_rows": [
+    13,
+    13
+   ],
+   "drift": 0,
+   "drift_ok": true,
+   "root_rows": [
+    13,
+    13
+   ],
+   "agree": 0,
+   "agree_ok": true,
+   "shimmer": 23,
+   "shimmer_ok": true
+  },
+  {
+   "action": "idle",
+   "dir": "up",
+   "foot_rows": [
+    13,
+    13
+   ],
+   "drift": 0,
+   "drift_ok": true,
+   "root_rows": [
+    13,
+    13
+   ],
+   "agree": 0,
+   "agree_ok": true,
+   "shimmer": 11,
+   "shimmer_ok": true
+  },
+  {
+   "action": "idle",
+   "dir": "down",
+   "foot_rows": [
+    13,
+    13
+   ],
+   "drift": 0,
+   "drift_ok": true,
+   "root_rows": [
+    13,
+    13
+   ],
+   "agree": 0,
+   "agree_ok": true,
+   "shimmer": 24,
+   "shimmer_ok": true
+  },
+  {
+   "action": "walk",
+   "dir": "right",
+   "foot_rows": [
+    13,
+    13,
+    13,
+    13
+   ],
+   "drift": 0,
+   "drift_ok": true,
+   "root_rows": [
+    13,
+    13,
+    13,
+    13
+   ],
+   "agree": 0,
+   "agree_ok": true,
+   "walk_leg_px": [
+    17,
+    19,
+    19,
+    18
+   ],
+   "walk_frame_px": [
+    49,
+    47,
+    47,
+    50
+   ],
+   "walk_ok": true
+  },
+  {
+   "action": "walk",
+   "dir": "up",
+   "foot_rows": [
+    13,
+    13,
+    13,
+    13
+   ],
+   "drift": 0,
+   "drift_ok": true,
+   "root_rows": [
+    13,
+    13,
+    13,
+    13
+   ],
+   "agree": 0,
+   "agree_ok": true,
+   "walk_leg_px": [
+    5,
+    6,
+    6,
+    5
+   ],
+   "walk_frame_px": [
+    28,
+    29,
+    30,
+    29
+   ],
+   "walk_ok": true
+  },
+  {
+   "action": "walk",
+   "dir": "down",
+   "foot_rows": [
+    13,
+    13,
+    13,
+    13
+   ],
+   "drift": 0,
+   "drift_ok": true,
+   "root_rows": [
+    13,
+    13,
+    13,
+    13
+   ],
+   "agree": 0,
+   "agree_ok": true,
+   "walk_leg_px": [
+    13,
+    14,
+    9,
+    15
+   ],
+   "walk_frame_px": [
+    54,
+    54,
+    47,
+    52
+   ],
+   "walk_ok": true
+  }
+ ],
+ "role_coverage": {
+  "cloak": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "trim": [
+   6,
+   7
+  ],
+  "skin": [
+   8,
+   9
+  ],
+  "leather": [
+   10,
+   11
+  ],
+  "glow": [
+   12
+  ],
+  "metal": [
+   13
+  ],
+  "detail": [
+   14
+  ]
+ },
+ "role_coverage_ok": true,
+ "fit_ok": true,
+ "all_ok": true
+}

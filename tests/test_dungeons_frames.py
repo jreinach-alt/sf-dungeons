@@ -110,22 +110,44 @@ def test_metrics_recomputed_from_the_pixels_pass(strips, fam, act):
     assert bad == [] and met["role_coverage_ok"], (bad, met["role_coverage"])
 
 
-def test_published_anchor_is_the_measured_foot_row(strips, fam, act):
+def test_published_anchor_is_the_root_row_and_feet_sit_within_one_of_it(strips, fam, act):
     with open(os.path.join(ACTORS, "anchors.json")) as f:
         doc = json.load(f)["models"]["wanderer"]
-    feet = {P.foot_row(f, fam.outline) for fr in strips.values() for f in fr}
-    assert feet == {doc["anchor_y"]} == {act["rig"]["anchor_px"][1]}
+    ax, ay = act["rig"]["anchor_px"]
+    assert (doc["anchor_x"], doc["anchor_y"]) == (int(ax), int(ay + 0.5))
+    for (name, d), fr in strips.items():
+        feet = [P.foot_row(f, fam.outline) for f in fr]
+        assert doc["foot_rows"][f"{name}_{d}"] == feet
+        assert all(abs(f - doc["anchor_y"]) <= 1 for f in feet), (name, d, feet)
 
 
-def test_the_drift_metric_fires_on_a_one_row_slide(strips, fam, act):
-    # falsification: lift one walk frame by a row (the defect the spike
-    # measured when the down-walk used the full side-view stride)
+def _walk_down_with(strips, fam, act, frame, dy):
     planted = dict(strips)
     fr = [f.copy() for f in strips[("walk", "down")]]
-    fr[1] = np.roll(fr[1], -1, axis=0)
+    f = fr[frame]
+    shifted = np.zeros_like(f)               # a shift, NOT a roll: row 0 holds the hood tip
+    if dy < 0:
+        shifted[:dy] = f[-dy:]
+    else:
+        shifted[dy:] = f[:-dy]
+    fr[frame] = shifted
     planted[("walk", "down")] = fr
     rows = {(r["action"], r["dir"]): r for r in S.metrics(planted, {}, fam, act)["per_action"]}
-    assert rows[("walk", "down")]["drift"] == 1 and not rows[("walk", "down")]["drift_ok"]
+    return rows[("walk", "down")]
+
+
+def test_the_drift_metric_fires_on_a_grounded_frame_that_slides(strips, fam, act):
+    # frame 2 is a contact frame (actions.toml grounded = [0, 2]): a one-row
+    # slide there is the defect the metric exists for
+    r = _walk_down_with(strips, fam, act, 2, -1)
+    assert r["drift"] == 1 and not r["drift_ok"]
+
+
+def test_the_metric_allows_a_lifted_foot_but_fires_on_a_sinking_one(strips, fam, act):
+    # a passing frame (1) may RISE by one row; it must never sink below the ground
+    assert _walk_down_with(strips, fam, act, 1, -1)["drift_ok"]
+    r = _walk_down_with(strips, fam, act, 1, +1)
+    assert r["sink"] == 1 and not r["drift_ok"]
 
 
 def test_the_walk_metric_fires_on_a_frozen_walk(strips, fam, act):

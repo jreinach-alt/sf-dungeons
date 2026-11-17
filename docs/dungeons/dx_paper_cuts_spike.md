@@ -177,3 +177,24 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
 - **easy / LOW — Pillow merges identical consecutive GIF frames**, summing
   their delays, so the lineup close-up's 96 captures save as 42 frames at
   the same real-time length.
+
+## The 16x32 retry (2026-11-17)
+
+- **surprise / MEDIUM — the foot-row metric assumed a symmetric stance.** In a
+  side view the near foot is lower by the stance's depth separation (~1.7 px
+  here), so "the lowest row is the same in every frame" failed on a correct
+  walk the moment a near foot lifted. Fixed by defining drift over the
+  grounded frames only and publishing the root row, not a foot row (14 §6.2).
+  The 16x16 set had passed by luck of a smaller stance.
+- **surprise / LOW — a pixel-boundary anchor makes a metric flicker.** The
+  boot edge sat at ~29.2, so a sub-pixel stride toggled the foot row. A
+  fractional `anchor_px` (27.6) moved it mid-pixel. `set_actor_camera` already
+  accepts floats; the TOML just had never needed one.
+- **clunky / LOW — `np.roll` wraps, and sprites touch row 0.** My planted
+  defect rolled the hood tip onto the bottom row and reported a 3-row drift
+  instead of 1. Plants on pixel data must shift, not roll.
+- **easy / LOW — the pipeline really was box-generic.** Only the smoke
+  verifier's test hard-coded a square canvas; everything else followed
+  `camera.box`.
+- **easy / LOW — a tall box is two OBJs, and that is cheap.** See 14 §6.2:
+  OAM slots, not scanline budget.

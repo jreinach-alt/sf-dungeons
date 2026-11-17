@@ -1,11 +1,13 @@
 # dgnh_obj — the model spike's on-hardware proof: the wanderer's committed
 # frames as 16x16 OBJs, animated on actions.toml's holds.
 #
-# NINE ACTORS: walk right / left (HFLIP of right, docs/dungeons/11 §2) / up /
-# down in P1; idle in the same four facings in P2; and one P1 walker crossing
-# the screen at the walk's ground speed, so foot slide is visible. All frames
-# are RESIDENT (18 frames, 72 tiles): the spike does not stream. obj_stream is
-# M3's (docs/dungeons/02 §1.2).
+# NINE ACTORS, each a 16x32 figure drawn as two stacked 16x16 OBJs: walk right /
+# left (HFLIP of right, docs/dungeons/11 §2) / up / down in P1; idle in the same
+# four facings in P2; and one P1 walker crossing the screen at the walk's ground
+# speed, so foot slide is visible. All frames are RESIDENT (18 frames, 144
+# tiles used of 192): the spike does not stream. obj_stream is M3's
+# (docs/dungeons/02 §1.2). The two halves cost OAM slots, not scanline budget:
+# a scanline crosses only one half.
 #
 # CPU-WRITTEN REGISTER, DECLARED: OBSEL $2101 (sprite size + OBJ CHR base for
 # every sprite), as every rail's OBJ feature does: oam_sprites is the OAM
@@ -25,7 +27,7 @@ mode = 1
 name = "obj_chr"
 kind = "chr"
 obj = true
-words = 1536             # 96 tiles x 16 words: the whole blob, one DMA
+words = 3072             # 192 tiles x 16 words: the whole blob, one DMA
 
 [[claims.cgram]]
 name = "obj_pal"
@@ -34,11 +36,12 @@ at = 128                 # hardware: OBJ palettes start at CGRAM 128.
                          # 128..143 = palette 0 (P1), 144..159 = palette 1 (P2)
 
 # Pinned: slot order is sprite priority, and a test reads entries by index.
-# TWELVE slots for nine actors so the three hi-table bytes are wholly ours
-# (sprg_obj's argument): slots 9..11 are parked.
+# EACH ACTOR IS TWO SLOTS: a 16x32 figure is a top and a bottom 16x16 OBJ
+# (16x32 is not a standard OBJ size). Nine actors = 18 slots, claimed as 20 so
+# the five hi-table bytes are wholly ours (sprg_obj's argument): 18, 19 parked.
 [[claims.oam]]
 name = "actors"
-sprites = 12
+sprites = 20
 at = 0
 
 [[claims.reg]]

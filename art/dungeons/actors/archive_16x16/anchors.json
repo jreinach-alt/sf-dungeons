@@ -1,0 +1,47 @@
+{
+ "about": "SuperForge Dungeons actor sprites: the foot point in the 16x16 box, MEASURED from the committed strips by sheets.py (the lowest model row; 13 \u00a74). anchor_x is where the camera puts the root's x. Draw a frame at (foot_x - anchor_x, foot_y - anchor_y).",
+ "models": {
+  "wanderer": {
+   "box_w": 16,
+   "box_h": 16,
+   "anchor_x": 8,
+   "anchor_y": 13,
+   "camera_anchor_px": [
+    8,
+    13
+   ],
+   "foot_rows": {
+    "idle_right": [
+     13,
+     13
+    ],
+    "idle_up": [
+     13,
+     13
+    ],
+    "idle_down": [
+     13,
+     13
+    ],
+    "walk_right": [
+     13,
+     13,
+     13,
+     13
+    ],
+    "walk_up": [
+     13,
+     13,
+     13,
+     13
+    ],
+    "walk_down": [
+     13,
+     13,
+     13,
+     13
+    ]
+   }
+  }
+ }
+}

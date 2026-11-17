@@ -87,6 +87,8 @@ before writing anything else.
 
 ## 4. Acceptance metrics (asserted by `sheets.py`, reported per run)
 
+**NOTE 2026-11-17: the table below was measured on the 16x16 set and is superseded for the current 16x32 frames by 14 §6.2** (drift over grounded frames, root-row anchor, fractional shimmer/walk thresholds). It is kept because the reasons in it still hold.
+
 **Calibrated on the model spike's renders (2026-11-15)**, the wanderer's
 `idle` + `walk` × 3 directions, whose figure covers about 58 model pixels a
 frame. The thresholds live in `sheets.py`, and `tests/test_dungeons_frames.py`

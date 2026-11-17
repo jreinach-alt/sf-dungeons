@@ -39,14 +39,15 @@ WORK = REPO / "build" / "dgn_art_work"
 X = 8                                       # sheet scale
 
 # --- thresholds (13 §4), calibrated on the spike's renders (2026-11-15) ----
-# Measured on the wanderer (~58 model px per frame); 13 §4 records the values
+# Measured on the 16x32 wanderer (~200-250 model px per frame); 13 §4 records the values
 # and what each threshold caught while the model was being tuned.
-DRIFT_MAX = 0          # foot row identical across an action's frames, per direction
-AGREE_TOL = 0          # foot row == the projected root row (measured: 0 everywhere)
-SHIMMER = (6, 30)      # idle 0<->1 px changed (measured 11..25; 40 was a sub-pixel hip dip)
-LEG_ROWS = 4           # the bottom rows (ending at the foot row) that hold the legs
-WALK_FRAME_MIN = 20    # contact vs passing, whole frame (measured 26..56)
-WALK_LEG_MIN = {"right": 12, "down": 8, "up": None}
+DRIFT_MAX = 0          # foot row identical across an action's GROUNDED frames, per direction
+LIFT_MAX = 1           # a lifted foot (a non-grounded frame) may rise this far, never sink
+AGREE_TOL = 1          # foot row within 1 of the projected root row (stance depth separation)
+SHIMMER = (0.10, 0.60) # idle 0<->1 px changed, as a FRACTION of the model's pixels
+LEG_ROWS = 9           # the bottom rows (ending at the foot row) that hold the legs
+WALK_FRAME_FRAC = 0.30 # contact vs passing, whole frame, as a fraction of model pixels
+WALK_LEG_MIN = {"right": 60, "down": 20, "up": None}
                        # ...and in the leg rows (measured right 17..19, down 9..15).
                        # None: from BEHIND the cloak hides the legs (measured 5..6);
                        # the up-walk reads by the body sway, so only the frame rule holds
@@ -102,24 +103,35 @@ def metrics(strips, roots, fam, act):
     rows, ok = [], True
     for (name, d), fr in strips.items():
         feet = [P.foot_row(f, fam.outline) for f in fr]
-        r = {"action": name, "dir": d, "foot_rows": feet, "drift": max(feet) - min(feet)}
-        r["drift_ok"] = r["drift"] <= DRIFT_MAX
+        grounded = act["action"][name].get("grounded", list(range(len(fr))))
+        g = [feet[i] for i in grounded]
+        base = max(g)
+        r = {"action": name, "dir": d, "foot_rows": feet, "grounded": grounded,
+             "drift": max(g) - min(g)}
+        # a frame outside `grounded` lifts a foot: it may rise by <= LIFT_MAX, never sink
+        r["lift"] = max([base - feet[i] for i in range(len(fr)) if i not in grounded] or [0])
+        r["sink"] = max([feet[i] - base for i in range(len(fr)) if i not in grounded] or [0])
+        r["drift_ok"] = r["drift"] <= DRIFT_MAX and r["lift"] <= LIFT_MAX and r["sink"] == 0
         pr = [roots.get((name, d, i)) for i in range(len(fr))]
         if all(pr):
             r["root_rows"] = [int(p[1]) for p in pr]
             r["agree"] = max(abs(f - int(p[1])) for f, p in zip(feet, pr))
             r["agree_ok"] = r["agree"] <= AGREE_TOL
+        npx = sum(int(((f != 0) & (f != fam.outline)).sum()) for f in fr) / len(fr)
+        r["model_px"] = round(npx, 1)
         if name == "idle":
             r["shimmer"] = P.shimmer(fr[0], fr[1])
-            r["shimmer_ok"] = SHIMMER[0] <= r["shimmer"] <= SHIMMER[1]
+            r["shimmer_frac"] = round(r["shimmer"] / npx, 3)
+            r["shimmer_ok"] = SHIMMER[0] <= r["shimmer_frac"] <= SHIMMER[1]
         if name == "walk":
             fb = min(feet)
             leg = slice(max(0, fb - LEG_ROWS + 1), fb + 1)
             pairs = [(0, 1), (1, 2), (2, 3), (3, 0)]
             r["walk_leg_px"] = [P.shimmer(fr[a][leg], fr[b][leg]) for a, b in pairs]
             r["walk_frame_px"] = [P.shimmer(fr[a], fr[b]) for a, b in pairs]
+            r["walk_frame_frac"] = round(min(r["walk_frame_px"]) / npx, 3)
             lmin = WALK_LEG_MIN.get(d)
-            r["walk_ok"] = (min(r["walk_frame_px"]) >= WALK_FRAME_MIN
+            r["walk_ok"] = (r["walk_frame_frac"] >= WALK_FRAME_FRAC
                             and (lmin is None or min(r["walk_leg_px"]) >= lmin))
         ok = ok and all(v for k, v in r.items() if k.endswith("_ok"))
         rows.append(r)
@@ -129,9 +141,9 @@ def metrics(strips, roots, fam, act):
         idx = range(role["lo"], role["hi"] + 1) if role["kind"] == "ramp" else [role["index"]]
         cover[role["name"]] = sorted(set(idx) & used)
     cover_ok = all(cover.values())
-    return {"thresholds": {"drift_max": DRIFT_MAX, "agree_tol": AGREE_TOL,
-                           "shimmer": list(SHIMMER), "leg_rows": LEG_ROWS,
-                           "walk_frame_min": WALK_FRAME_MIN, "walk_leg_min": WALK_LEG_MIN},
+    return {"thresholds": {"drift_max": DRIFT_MAX, "lift_max": LIFT_MAX, "agree_tol": AGREE_TOL,
+                           "shimmer_frac": list(SHIMMER), "leg_rows": LEG_ROWS,
+                           "walk_frame_frac": WALK_FRAME_FRAC, "walk_leg_min": WALK_LEG_MIN},
             "per_action": rows, "role_coverage": cover, "role_coverage_ok": cover_ok,
             "fit_ok": True, "all_ok": ok and cover_ok}
 
@@ -139,15 +151,18 @@ def metrics(strips, roots, fam, act):
 def write_anchors(model, strips, fam, act):
     bw, bh = act["camera"]["box"]
     feet = {f"{n}_{d}": [P.foot_row(f, fam.outline) for f in fr] for (n, d), fr in strips.items()}
-    allf = [v for fs in feet.values() for v in fs]
-    doc = {"about": "SuperForge Dungeons actor sprites: the foot point in the 16x16 box, "
-                    "MEASURED from the committed strips by sheets.py (the lowest model row; "
-                    "13 §4). anchor_x is where the camera puts the root's x. Draw a frame at "
-                    "(foot_x - anchor_x, foot_y - anchor_y).",
+    ax, ay = act["rig"]["anchor_px"]
+    root_row = int(ay + 0.5)          # the camera puts the root's CENTRE at row ay + 0.5
+    doc = {"about": "SuperForge Dungeons actor sprites. anchor_x / anchor_y are the pixel the "
+                    "figure's ROOT (the ground point between the feet) lands on in the box, "
+                    "identical in every direction; draw a frame at (ground_x - anchor_x, "
+                    "ground_y - anchor_y). foot_rows are the MEASURED lowest model row per "
+                    "frame: they differ from anchor_y by the stance's depth separation (the "
+                    "near foot is lower in a side view), which is geometry, not drift. "
+                    "Written by sheets.py (13 §4).",
            "models": {model: {"box_w": bw, "box_h": bh,
-                              "anchor_x": act["rig"]["anchor_px"][0],
-                              "anchor_y": max(set(allf), key=allf.count),
-                              "camera_anchor_px": act["rig"]["anchor_px"],
+                              "anchor_x": int(ax), "anchor_y": root_row,
+                              "camera_anchor_px": [ax, ay],
                               "foot_rows": feet}}}
     (HERE / "anchors.json").write_text(json.dumps(doc, indent=1) + "\n")
     return doc

@@ -230,3 +230,72 @@ identical md5.
 **Footage:** `tools/dgn_hero_footage.py OUT.gif` records the ROM in lockstep,
 one emulated frame per step and every second frame kept, at real speed.
 `--crop 32,66,192,82 --scale 4` gives the lineup close-up.
+
+## 6.2 Second try: 16x32 (2026-11-17)
+
+**Why:** the owner's concern was that a 16x16 figure would not read, whatever
+its memory efficiency. The first try's sheet agreed: at ~58 model pixels the
+wanderer was a hooded blob. Same model, rig and pipeline, re-run on a 16 wide
+x 32 tall box. The 16x16 set is kept, with its sheet, metrics and TOML, in
+`art/dungeons/actors/archive_16x16/`, and the two are compared in
+`art/dungeons/actors/compare_16x16_vs_16x32.png` (same palette, same pixel
+scale, grounds aligned).
+
+**What the 32 rows buy** (~200-250 model pixels a frame, 3.5-4x as many):
+
+- The down view has a face: eyes, a hood rim and a bearded-looking tunic
+  (the open cloak shows the leather torso right under the chin: it reads as
+  a beard. A scarf in the trim role would end that if it is unwanted).
+- The side view has a profile: hood, belt, a lantern, a trailing hem and a
+  boot, where 16x16 had a blob and two pixels.
+- The back view is still the weakest: a blue cloak block, with the legs
+  hidden by design. It now has a hood shape, a hem and boots, and reads as
+  "walking away".
+
+**What changed, all data or one stretch factor:**
+
+- `camera.box = [16, 32]`, `px_per_unit = 28` (was 16: the figure is drawn
+  1.75x larger than a metatile unit, i.e. about 1.6 metatiles tall; 02 and 11
+  should state that scale on purpose), `rig.z_stretch = 1.3`. The 1:2 box
+  wants a taller figure than the 1:1.5 the model had, and the cloak had to
+  stay inside 16 px. The stretch is applied per part, before binding, so
+  limbs keep their shape and do not shear when they rotate.
+- `anchor_px = [9, 27.6]`. The 1 px x shift is because the trailing cloak
+  poked 1 px past the left edge on one frame (`pixelate` refused it: refuse,
+  never crop). The y is fractional ON PURPOSE: the boot's bottom edge was
+  landing on a pixel boundary and the foot row flickered 28/29.
+- Boots are square (0.09 x 0.09): an oblong footprint projected to a
+  different row in the side and front views.
+- The down-walk stride is +-5 degrees (was 8), for the same depth-projection
+  reason as 6's drift.
+
+**Two metric definitions had to be corrected, and one finding is new:**
+
+- In a side view the two feet are separated along the camera's DEPTH axis, so
+  the near foot is ~1.7 px lower than the far one, and when the near foot
+  lifts mid-step the lowest visible foot is the far one. That is geometry,
+  not slide. So (13 section 4): **drift is measured over the `grounded`
+  frames** (`actions.toml` `action.walk.grounded = [0, 2]`), a lifted foot may
+  RISE by 1 and must never SINK, and the **published anchor is the ROOT row**
+  (identical in every direction), not a foot row. `anchors.json` keeps the
+  measured per-frame foot rows for information.
+- Shimmer and walk legibility are now FRACTIONS of the model's pixels (the
+  absolute counts do not survive a change of sprite size): measured idle
+  shimmer 0.27-0.53, walk frame change 0.57-0.85; floors/ceilings in
+  `sheets.py`.
+
+**On the console:** 16x32 is not a standard OBJ size, so each figure is TWO
+stacked 16x16 OBJs (top at name N, bottom at N + 32). That costs OAM slots
+(18 for nine figures, claimed as 20) but NOT scanline budget: a scanline
+crosses only one of the two halves, so the per-line sprite and tile-sliver
+limits are what a single 16x16 would cost. Hardware modes 6 and 7 do offer a
+native 16x32 OBJ, but the manuals call them prohibited; I did not use them.
+`tests/test_dgn_hero.py` (7 tests, unchanged in shape) passes: VRAM decodes to
+the strips, the screen matches the strips pixel for pixel, and the two halves
+agree on x, attr, size and X9 through the walker's wrap. Two planted defects
+(a wrong bottom-half name, a lost bottom X9) each turned a test red.
+
+**What it does to the budgets (to carry into 02 and 08 M3):** a frame is now
+8 tiles (256 B), twice the 16x16's 4. The hero's resident-or-streamed slot
+sizes in 02 section 1.2 double, and a hero is 2 OAM slots, so 2 heroes + 10
+actors is at least 24 slots before shots.

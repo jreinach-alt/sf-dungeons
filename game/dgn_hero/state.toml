@@ -15,6 +15,7 @@ wx = "u16@dp"            # the walker's foot x, screen px, signed (wraps
                          # through -16 so it re-enters from the left)
 tmp = "u16@dp"           # the placement loop's scratch (frame / x)
                          # TICK: ok — holds an animation-frame / CHR index, no time
+tmp2 = "u16@dp"          # name arithmetic scratch
 ts_acc = "u16@dp"        # tick_scale's carried fraction (8.8).
                          # TICK: ok — this word removes a frame coupling
 ts_step = "u16@dp"       # this frame's whole-px step, published once.

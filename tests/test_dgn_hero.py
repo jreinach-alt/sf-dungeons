@@ -3,8 +3,9 @@
 runtime: ~15 s — lockstep Machine boots, dominated by the per-frame OAM walks.
 
 The spike (docs/dungeons/14) proved the art in Blender and in Python. This
-module proves it on the machine: the committed indexed strips reach OBJ VRAM
-intact, the P1/P2 palettes reach CGRAM as the role contract says, the walk
+module proves it on the machine. Each figure is 16x32, drawn as TWO stacked
+16x16 OBJs (16x32 is not a standard OBJ size): the committed indexed strips
+reach OBJ VRAM intact, the P1/P2 palettes reach CGRAM as the role contract says, the walk
 and idle advance on actions.toml's holds, and the PICTURE is the strips'
 pixels at the measured anchor, the left facing being the right one mirrored.
 
@@ -54,10 +55,12 @@ C_OBJ = _sym("ES_C_OBJ_PAL", "show")["start"]          # CGRAM word index
 OAM_ACTORS = _sym("ES_O_ACTORS", "show")["start"]      # first sprite slot
 OAM_HI_BASE = 512
 BOOT = 120
+BOX_W, BOX_H = ACT_BOX = (16, 32)
 
 ACT = tomllib.loads((ACTORS / "actions.toml").read_text())
 ANCHOR = json.loads((ACTORS / "anchors.json").read_text())["models"]["wanderer"]
 AX, AY = ANCHOR["anchor_x"], ANCHOR["anchor_y"]
+assert tuple(ACT["camera"]["box"]) == (BOX_W, BOX_H)
 # Blob order (tools/gen_dgn_hero_assets.py STRIPS) and the lineup
 # (dgnh_obj.asm's actor table): (slot, action, dir, hflip, palette)
 ORDER = [("idle", "right"), ("idle", "up"), ("idle", "down"),
@@ -73,28 +76,39 @@ ROWS = {"walk": 84, "idle": 132}                       # dgnh.inc foot y
 
 def _strip(action, d):
     a = np.asarray(Image.open(ACTORS / "frames" / f"wanderer_{action}_{d}.png"))
-    return [a[:, i * 16:(i + 1) * 16] for i in range(ACT["action"][action]["frames"])]
+    return [a[:, i * BOX_W:(i + 1) * BOX_W] for i in range(ACT["action"][action]["frames"])]
 
 
-FRAMES = [f for a, d in ORDER for f in _strip(a, d)]   # blob frame index -> 16x16
+FRAMES = [f for a, d in ORDER for f in _strip(a, d)]   # blob frame index -> 16x32
 FIRST = {}
 for _a, _d in ORDER:
     FIRST[(_a, _d)] = sum(ACT["action"][a]["frames"] for a, d in ORDER[:ORDER.index((_a, _d))])
 
 
 def _name_of(f):
-    return (f % 8) * 2 + (f // 8) * 32
+    """The TOP half's name: 8 frames per band of 4 tile rows of the 16-wide table."""
+    return (f % 8) * 2 + (f // 8) * 64
 
 
 def _frame_of(name):
-    return (name // 32) * 8 + (name % 32) // 2
+    return (name // 64) * 8 + (name % 64) // 2
 
 
-def _oam(m, slot):
-    x, y, name, attr = m.read_bytes(O, (OAM_ACTORS + slot) * 4, 4)
-    hi = m.read_byte(O, OAM_HI_BASE + (OAM_ACTORS + slot) // 4)
-    bits = (hi >> (((OAM_ACTORS + slot) % 4) * 2)) & 3
+def _entry(m, e):
+    """OAM entry e (absolute slot): (x with X9, y, name, attr, large)."""
+    x, y, name, attr = m.read_bytes(O, e * 4, 4)
+    hi = m.read_byte(O, OAM_HI_BASE + e // 4)
+    bits = (hi >> ((e % 4) * 2)) & 3
     return x | ((bits & 1) << 8), y, name, attr, bits >> 1
+
+
+def _oam(m, actor):
+    """An actor's TOP half. Each actor is two slots: top at 2*actor, bottom next."""
+    return _entry(m, OAM_ACTORS + 2 * actor)
+
+
+def _oam_bottom(m, actor):
+    return _entry(m, OAM_ACTORS + 2 * actor + 1)
 
 
 def _decode_tile(b):
@@ -132,12 +146,12 @@ def test_obj_chr_is_the_converted_blob(fresh):
 
 
 def test_vram_decodes_back_to_the_committed_strips(fresh):
-    """Independent of the converter: VRAM's 16x16 frames ARE the PNG pixels."""
+    """Independent of the converter: VRAM's 16x32 frames ARE the PNG pixels."""
     raw = fresh.read_bytes(V, V_OBJ * 2, V_OBJ_W * 2)
     for f, want in enumerate(FRAMES):
         n = _name_of(f)
-        got = np.zeros((16, 16), np.uint8)
-        for ty in range(2):
+        got = np.zeros((BOX_H, BOX_W), np.uint8)
+        for ty in range(BOX_H // 8):
             for tx in range(2):
                 t = n + ty * 16 + tx
                 got[ty * 8:ty * 8 + 8, tx * 8:tx * 8 + 8] = _decode_tile(raw[t * 32:t * 32 + 32])
@@ -199,14 +213,17 @@ def test_the_screen_is_the_strip_frames_at_the_anchor(fresh, tmp_path):
     words = [int.from_bytes(cg[i:i + 2], "little") for i in range(0, 512, 2)]
     for slot, action, d, flip, pal in LINEUP:
         x, y, name, attr, large = _oam(fresh, slot)
+        bx, by, bname, battr, blarge = _oam_bottom(fresh, slot)
+        # the bottom half: same x, attr and size, one 16x16 lower, two tile rows on
+        assert (bx, bname, battr, blarge) == (x, name + 32, attr, large) and by == (y + 16) & 255
         assert large == 1 and bool(attr & 0x40) == flip and (attr >> 1) & 7 == pal
         f = _frame_of(name)
         assert FIRST[(action, d)] <= f < FIRST[(action, d)] + ACT["action"][action]["frames"]
         foot_x = COLS[slot % 4]
-        assert x == foot_x - ((15 - AX) if flip else AX), f"slot {slot}: x off the anchor"
+        assert x == foot_x - ((BOX_W - 1 - AX) if flip else AX), f"slot {slot}: x off the anchor"
         assert y == ROWS[action] - AY - 1, f"slot {slot}: y off the anchor"
         want = FRAMES[f][:, ::-1] if flip else FRAMES[f]
-        crop = img[PICTURE_TOP + y:PICTURE_TOP + y + 16, x:x + 16]
+        crop = img[PICTURE_TOP + y:PICTURE_TOP + y + BOX_H, x:x + BOX_W]
         got = _to_index(crop, [words[0]] + words[128 + 16 * pal + 1:128 + 16 * pal + 16])
         assert (got == want).all(), f"slot {slot} ({action} {d}{' flipped' if flip else ''}) " \
                                     f"renders differently from frame {f}"
@@ -230,4 +247,7 @@ def test_the_walker_moves_at_ground_speed_and_wraps():
         m.advance(1)
         xs.append(_oam(m, WALKER)[0])
     assert any(x >= 496 for x in xs), "the walker never re-entered from the left (X9 never set)"
+    for _ in range(80):                       # both halves wrap together, X9 included
+        m.advance(1)
+        assert _oam(m, WALKER)[0] == _oam_bottom(m, WALKER)[0], "the walker's halves disagree on x"
     assert all(x < 256 or x >= 496 for x in xs), f"the walker left the -16..255 band: {xs}"

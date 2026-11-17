@@ -1,16 +1,17 @@
 {
  "thresholds": {
   "drift_max": 0,
-  "agree_tol": 0,
-  "shimmer": [
-   6,
-   30
+  "lift_max": 1,
+  "agree_tol": 1,
+  "shimmer_frac": [
+   0.1,
+   0.6
   ],
-  "leg_rows": 4,
-  "walk_frame_min": 20,
+  "leg_rows": 9,
+  "walk_frame_frac": 0.3,
   "walk_leg_min": {
-   "right": 12,
-   "down": 8,
+   "right": 60,
+   "down": 20,
    "up": null
   }
  },
@@ -19,153 +20,201 @@
    "action": "idle",
    "dir": "right",
    "foot_rows": [
-    13,
-    13
+    29,
+    29
+   ],
+   "grounded": [
+    0,
+    1
    ],
    "drift": 0,
+   "lift": 0,
+   "sink": 0,
    "drift_ok": true,
    "root_rows": [
-    13,
-    13
+    28,
+    28
    ],
-   "agree": 0,
+   "agree": 1,
    "agree_ok": true,
-   "shimmer": 23,
+   "model_px": 197.5,
+   "shimmer": 105,
+   "shimmer_frac": 0.532,
    "shimmer_ok": true
   },
   {
    "action": "idle",
    "dir": "up",
    "foot_rows": [
-    13,
-    13
+    28,
+    28
+   ],
+   "grounded": [
+    0,
+    1
    ],
    "drift": 0,
+   "lift": 0,
+   "sink": 0,
    "drift_ok": true,
    "root_rows": [
-    13,
-    13
+    28,
+    28
    ],
    "agree": 0,
    "agree_ok": true,
-   "shimmer": 11,
+   "model_px": 253.0,
+   "shimmer": 69,
+   "shimmer_frac": 0.273,
    "shimmer_ok": true
   },
   {
    "action": "idle",
    "dir": "down",
    "foot_rows": [
-    13,
-    13
+    28,
+    28
+   ],
+   "grounded": [
+    0,
+    1
    ],
    "drift": 0,
+   "lift": 0,
+   "sink": 0,
    "drift_ok": true,
    "root_rows": [
-    13,
-    13
+    28,
+    28
    ],
    "agree": 0,
    "agree_ok": true,
-   "shimmer": 24,
+   "model_px": 228.0,
+   "shimmer": 64,
+   "shimmer_frac": 0.281,
    "shimmer_ok": true
   },
   {
    "action": "walk",
    "dir": "right",
    "foot_rows": [
-    13,
-    13,
-    13,
-    13
+    29,
+    29,
+    29,
+    28
+   ],
+   "grounded": [
+    0,
+    2
    ],
    "drift": 0,
+   "lift": 1,
+   "sink": 0,
    "drift_ok": true,
    "root_rows": [
-    13,
-    13,
-    13,
-    13
+    28,
+    28,
+    28,
+    28
    ],
-   "agree": 0,
+   "agree": 1,
    "agree_ok": true,
+   "model_px": 221.8,
    "walk_leg_px": [
-    17,
-    19,
-    19,
-    18
+    86,
+    85,
+    85,
+    89
    ],
    "walk_frame_px": [
-    49,
-    47,
-    47,
-    50
+    205,
+    191,
+    189,
+    206
    ],
+   "walk_frame_frac": 0.852,
    "walk_ok": true
   },
   {
    "action": "walk",
    "dir": "up",
    "foot_rows": [
-    13,
-    13,
-    13,
-    13
+    28,
+    28,
+    28,
+    28
+   ],
+   "grounded": [
+    0,
+    2
    ],
    "drift": 0,
+   "lift": 0,
+   "sink": 0,
    "drift_ok": true,
    "root_rows": [
-    13,
-    13,
-    13,
-    13
+    28,
+    28,
+    28,
+    28
    ],
    "agree": 0,
    "agree_ok": true,
+   "model_px": 247.0,
    "walk_leg_px": [
-    5,
-    6,
-    6,
-    5
+    24,
+    27,
+    21,
+    24
    ],
    "walk_frame_px": [
-    28,
-    29,
-    30,
-    29
+    141,
+    142,
+    144,
+    143
    ],
+   "walk_frame_frac": 0.571,
    "walk_ok": true
   },
   {
    "action": "walk",
    "dir": "down",
    "foot_rows": [
-    13,
-    13,
-    13,
-    13
+    28,
+    28,
+    28,
+    28
+   ],
+   "grounded": [
+    0,
+    2
    ],
    "drift": 0,
+   "lift": 0,
+   "sink": 0,
    "drift_ok": true,
    "root_rows": [
-    13,
-    13,
-    13,
-    13
+    28,
+    28,
+    28,
+    28
    ],
    "agree": 0,
    "agree_ok": true,
+   "model_px": 222.8,
    "walk_leg_px": [
-    13,
-    14,
-    9,
-    15
+    31,
+    35,
+    30,
+    32
    ],
    "walk_frame_px": [
-    54,
-    54,
-    47,
-    52
+    189,
+    185,
+    176,
+    185
    ],
+   "walk_frame_frac": 0.79,
    "walk_ok": true
   }
  ],

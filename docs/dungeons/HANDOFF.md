@@ -26,8 +26,9 @@ follows the shape of sf-gt's `docs/fgt/HANDOFF.md`.
   metrics pass, with drift 0, and they are recalibrated on the measured
   values. `build_all.sh` has the render, pixelate and sheets stages.
   `roll` / `hurt` / `downed` / `swing` are not yet tuned.
-- **ROM:** `game/dgn_hero` (2026-11-16) is the spike's on-console proof: the
-  committed wanderer frames as resident 16×16 OBJs, animated on
+- **ROM:** `game/dgn_hero` (2026-11-16; re-done at 16x32 on 2026-11-17, see
+  14 §6.2) is the spike's on-console proof: the
+  committed wanderer frames as resident 16x32 figures (two stacked 16x16 OBJs), animated on
   `actions.toml`'s holds, with the P1/P2 palettes (14 §6.1,
   `tests/test_dgn_hero.py`). It is not the game: `game/dungeons` does not
   exist yet, and 08 M0 creates it. `tools/gen_dgn_hero_assets.py` is the
@@ -35,7 +36,9 @@ follows the shape of sf-gt's `docs/fgt/HANDOFF.md`.
 
 ## 3. Next, in order
 
-1. ~~The model spike~~: done; see 14 §6 and `dx_paper_cuts_spike.md`.
+1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,
+   which supersedes the 16x16 numbers; those are archived). **Open decision:
+   the hero size (16x32 recommended) and the metatile/actor scale, 02 and 11.**
 2. Fold the spike's verdict into 11. 13 already carries it: the §3 as-built
    notes and the §4 calibrated metrics. Then tune `roll` / `hurt` / `downed`
    (per-direction tables; `downed` facing down is refused today) and write

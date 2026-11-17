@@ -1,8 +1,9 @@
 ; =============================================================================
 ; dgnh_obj.asm — the model spike's wanderer as nine animated 16x16 OBJs
 ; =============================================================================
-; CHR + both palettes from the dgnh_rom blobs; twelve OAM slots from this
-; feature's claim. Every entry is rebuilt each frame into the oam_sprites
+; CHR + both palettes from the dgnh_rom blobs; twenty OAM slots from this
+; feature's claim: NINE ACTORS x TWO (a 16x32 figure is a top and a bottom
+; 16x16 OBJ), plus two parked pads. Every entry is rebuilt each frame into the oam_sprites
 ; SHADOW (never hardware OAM, which the engine's VBlank GP-DMA owns) from the
 ; actor table below and the scene's two animation clocks.
 ;
@@ -15,25 +16,28 @@ OBJ0 = ES_OAM_SHADOW + ES_O_ACTORS * 4
 OBJ_HI = OBJ_HI_BASE + (ES_O_ACTORS / 4)
 OBJ_PARK_Y = 240                  ; Y = $F0: below the screen
 
-; THE NAME-TABLE LAYOUT gen_dgn_hero_assets.py writes, asserted: 8 16x16
-; frames per 2-tile-row band of the 16-tile-wide OBJ name table, so frame f
-; is name (f%8)*2 + (f/8)*32 = 2 * (f + (f & ~7)).
+; THE NAME-TABLE LAYOUT gen_dgn_hero_assets.py writes, asserted: 8 16x32
+; frames per 4-tile-row band of the 16-tile-wide OBJ name table, so frame f's
+; TOP half is name (f%8)*2 + (f/8)*64 = 2*(f&7) + 8*(f&~7), and its BOTTOM half
+; is that + 32 (two tile rows down). Both are < 256, so the name-table bit is 0.
 .assert DGNH_BAND * 2 = 16, error, "dgnh_obj: the converter's band must span the 16-wide name table"
+BOT_NAME_DELTA = 2 * 16           ; two tile rows of the 16-wide name table
 .assert ES_O_ACTORS .MOD 4 = 0, error, "dgnh_obj: the actors must start a hi-table byte"
-.assert ES_O_ACTORS_SPRITES = 12, error, "dgnh_obj: three whole hi-table bytes"
+.assert ES_O_ACTORS_SPRITES = 20, error, "dgnh_obj: five whole hi-table bytes"
 
 ; --- OAM attribute bytes: vhoopppN -------------------------------------------
 ATTR_P1    = 3 << 4               ; priority 3, OBJ palette 0 (P1)
 ATTR_P2    = (3 << 4) | (1 << 1)  ; priority 3, OBJ palette 1 (P2)
 ATTR_HFLIP = 1 << 6               ; left = HFLIP of right (docs/dungeons/11 §2)
 HI_LARGE4  = %10101010            ; four slots, all LARGE, all X9 clear
-HI_LARGE1  = %00000010            ; slot 0 of the byte large, the rest small
+HI_LARGE2  = %00001010            ; slots 0 and 1 of the byte large, 2 and 3 small
 
 ; The anchor in a flipped frame: column 15 - x of the unflipped one.
 DX_RIGHT = DGNH_ANCHOR_X
 DX_LEFT  = (16 - 1) - DGNH_ANCHOR_X
 OAM_DY   = DGNH_ANCHOR_Y + 1      ; an OBJ's first line is scanline Y+1, so
-                                  ; the foot row lands ON the foot y
+                                  ; the root row (anchor y) lands ON the foot y
+HALF     = 16                     ; the bottom OBJ sits one 16x16 below the top
 
 ; --- the actor table ----------------------------------------------------------
 ; Per actor, 7 words: foot x, foot y, clock (0 idle, 1 walk), first frame,
@@ -47,7 +51,7 @@ ACT_DX    = 10
 ACT_MOVE  = 12
 ACT_SIZE  = 14
 DGNH_ACTORS = 9
-DGNH_WALKER_SLOT = 8              ; the last actor; hi byte 2, slot 0
+DGNH_WALKER_SLOT = 16             ; the last actor's TOP slot (2 per actor); hi byte 4, slot 0
 
 COL1 = DGNH_COL0 + DGNH_COL_STEP
 COL2 = DGNH_COL0 + DGNH_COL_STEP * 2
@@ -80,8 +84,8 @@ dgnh_actors_end:
 ; CONTRACT dgnh_obj_arm
 ;   entry:    A16 I16 DB=0
 ;   exit:     A16 I16
-;   out:      OBJ CHR, OBJ palettes 0-1, OBSEL, the three hi-table bytes,
-;             slots 9-11 parked
+;   out:      OBJ CHR, OBJ palettes 0-1, OBSEL, the five hi-table bytes,
+;             slots 18-19 parked
 ;   clobbers: A, X, N, Z, C
 ;   assumes:  forced blank AND the NMI masked (the scene_mgr enter
 ;             contract). Without these uploads OBJ VRAM and CGRAM 128.. are
@@ -139,17 +143,19 @@ dgnh_obj_arm:
     .a8
     lda #ES_V_OBJ_CHR_OBSEL_BASE
     sta a:$2101
-    ; ---- hi table: slots 0-7 large (lineup), 8 large (walker), 9-11 small -
+    ; ---- hi table: slots 0-15 large (the lineup), 16-17 large (the walker),
+    ; 18-19 small pads --------------------------------------------------------
     lda #HI_LARGE4
     sta a:OBJ_HI + 0
     sta a:OBJ_HI + 1
-    lda #HI_LARGE1
-    sta a:OBJ_HI + 2                ; dgnh_obj_place rebuilds the walker's X9
-    ; ---- slots 9-11: parked ------------------------------------------------
+    sta a:OBJ_HI + 2
+    sta a:OBJ_HI + 3
+    lda #HI_LARGE2
+    sta a:OBJ_HI + 4                ; dgnh_obj_place rebuilds the walker's X9s
+    ; ---- slots 18-19: parked ------------------------------------------------
     lda #OBJ_PARK_Y
-    sta a:OBJ0 + (DGNH_ACTORS + 0) * 4 + 1
-    sta a:OBJ0 + (DGNH_ACTORS + 1) * 4 + 1
-    sta a:OBJ0 + (DGNH_ACTORS + 2) * 4 + 1
+    sta a:OBJ0 + (DGNH_ACTORS * 2 + 0) * 4 + 1
+    sta a:OBJ0 + (DGNH_ACTORS * 2 + 1) * 4 + 1
     rep #$20
     .a16
     rts
@@ -159,8 +165,9 @@ dgnh_obj_arm:
 ;   entry:    A16 I16 DB=0
 ;   exit:     A16 I16
 ;   in:       US_IDLE_I, US_WALK_I (the clocks), US_WX (the walker's foot x)
-;   out:      slots 0-8 (x, y, name, attr) and hi byte 2's walker X9
-;   clobbers: A, X, Y, N, Z, C, US_TMP
+;   out:      slots 0-17 (x, y, name, attr: a top and a bottom OBJ per actor)
+;             and hi byte 4's walker X9s
+;   clobbers: A, X, Y, N, Z, C, US_TMP, US_TMP2
 ;   assumes:  once per frame from the scene's tick, after the clocks and
 ;             US_WX are committed
 ;   tail:     rts
@@ -169,11 +176,11 @@ dgnh_obj_place:
     .i16
     SF_ASSERT_WIDTH 16, 16, "dgnh_obj_place"
     ldx #0                          ; actor table byte offset
-    ldy #0                          ; OAM low-table byte offset
+    ldy #0                          ; OAM low-table byte offset (8 per actor)
 @actor:
     .a16
     .i16
-    ; ---- frame = first frame + this actor's clock; name = 2 (f + f & ~7) --
+    ; ---- frame = first frame + this actor's clock --------------------------
     lda f:dgnh_actors + ACT_CLOCK, x
     beq @idle_clock
     lda z:US_WALK_I
@@ -187,16 +194,27 @@ dgnh_obj_place:
     .i16
     clc
     adc f:dgnh_actors + ACT_BASE, x
-    sta z:US_TMP
+    sta z:US_TMP                    ; f
+    ; ---- top name = 2*(f&7) + 8*(f&~7) -------------------------------------
     and #.loword(~(DGNH_BAND - 1))
-    clc
-    adc z:US_TMP
     asl a
+    asl a
+    asl a
+    sta z:US_TMP2                   ; 8*(f&~7)
+    lda z:US_TMP
+    and #(DGNH_BAND - 1)
+    asl a
+    clc
+    adc z:US_TMP2                   ; A = the top half's name
     sep #$20
     .a8
-    sta a:OBJ0 + 2, y               ; name (bit 8 clear: frames < 128 names)
+    sta a:OBJ0 + 2, y               ; top name (bit 8 clear: names < 256)
+    clc
+    adc #BOT_NAME_DELTA
+    sta a:OBJ0 + 4 * 1 + 2, y       ; bottom name
     lda f:dgnh_actors + ACT_ATTR, x
     sta a:OBJ0 + 3, y
+    sta a:OBJ0 + 4 * 1 + 3, y
     rep #$20
     .a16
     ; ---- x = foot x - anchor dx (the walker's foot x is live) -------------
@@ -216,15 +234,19 @@ dgnh_obj_place:
     sep #$20
     .a8
     sta a:OBJ0 + 0, y
+    sta a:OBJ0 + 4 * 1 + 0, y
     rep #$20
     .a16
-    ; ---- y = foot y - (anchor y + 1) --------------------------------------
+    ; ---- y: top = foot y - (anchor y + 1); bottom = top + 16 --------------
     lda f:dgnh_actors + ACT_Y, x
     sec
     sbc #OAM_DY
     sep #$20
     .a8
     sta a:OBJ0 + 1, y
+    clc
+    adc #HALF
+    sta a:OBJ0 + 4 * 1 + 1, y
     rep #$20
     .a16
     ; ---- next ---------------------------------------------------------------
@@ -232,29 +254,34 @@ dgnh_obj_place:
     clc
     adc #ACT_SIZE
     tax
-    iny
-    iny
-    iny
-    iny
+    tya
+    clc
+    adc #8
+    tay
     cpx #(DGNH_ACTORS * ACT_SIZE)
     bcc @actor
-    ; ---- the walker's X9 (bit 8 of its OAM x) into hi byte 2, slot 0 ------
+    ; ---- the walker's X9 (bit 8 of its OAM x) into hi byte 4, for BOTH halves:
+    ; slot 16 -> bit 0, slot 17 -> bit 2 -------------------------------------
     lda z:US_WX
     sec
     sbc #DX_RIGHT
     xba
     and #1
-    ora #HI_LARGE1
+    sta z:US_TMP
+    asl a
+    asl a
+    ora z:US_TMP
+    ora #HI_LARGE2
     sep #$20
     .a8
     sta a:OBJ_HI + (DGNH_WALKER_SLOT / 4)
     rep #$20
     .a16
     rts
-.assert DGNH_WALKER_SLOT = DGNH_ACTORS - 1, error, "dgnh_obj: the walker is the last actor"
-.assert DGNH_WALKER_SLOT .MOD 4 = 0, error, "dgnh_obj: the walker owns bit 0 of its hi byte"
+.assert DGNH_WALKER_SLOT = (DGNH_ACTORS - 1) * 2, error, "dgnh_obj: the walker is the last actor"
+.assert DGNH_WALKER_SLOT .MOD 4 = 0, error, "dgnh_obj: the walker's top half owns bit 0 of its hi byte"
 
-; --- dgnh_obj_park: hide all twelve (scene exit) ----------------------------
+; --- dgnh_obj_park: hide all twenty (scene exit) ----------------------------
 ; CONTRACT dgnh_obj_park
 ;   entry:    A16 I16 DB=0
 ;   exit:     A16 I16
@@ -284,6 +311,8 @@ dgnh_obj_park:
     stz a:OBJ_HI + 0
     stz a:OBJ_HI + 1
     stz a:OBJ_HI + 2
+    stz a:OBJ_HI + 3
+    stz a:OBJ_HI + 4
     rep #$20
     .a16
     rts

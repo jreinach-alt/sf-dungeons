@@ -111,15 +111,15 @@ def test_smoke_verifier_accepts_a_good_frame_and_names_a_bad_one(fam):
     act = tomllib.loads((V.HERE / "actions.toml").read_text())
     cam = act["camera"]
     ss, m = cam["supersample"], cam["margin_px"]
-    n = (cam["box"][0] + 2 * m) * ss
-    raw = np.zeros((n, n, 3), np.uint8)
+    bw, bh = cam["box"]
+    raw = np.zeros(((bh + 2 * m) * ss, (bw + 2 * m) * ss, 3), np.uint8)   # any box, not just 16x16
     r = lambda sx, sy, w, h, mat: raw.__setitem__(
         (slice(sy * ss, (sy + h) * ss), slice(sx * ss, (sx + w) * ss)), (200, mat, 128))
     r(9, 8, 6, 8, 2)        # cloak
     r(10, 5, 4, 3, 4)       # skin
     r(8, 16, 8, 2, 1)       # shadow
     errs, sprite = V.verify(raw, act, fam)
-    assert errs == [] and sprite.shape == (16, 16)
+    assert errs == [] and sprite.shape == (bh, bw)
     raw[0:ss, 0:ss] = (0, 77, 0)                      # an id no material has
     errs, _ = V.verify(raw, act, fam)
     assert any("not exact" in e for e in errs)

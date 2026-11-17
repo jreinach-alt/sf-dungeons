@@ -37,6 +37,7 @@ import kit as K  # noqa: E402
 import pose_data  # noqa: E402
 
 MODEL = "wanderer"
+ZSTRETCH = BC.load_toml("actions.toml")["rig"].get("z_stretch", 1.0)   # actions.toml rig.z_stretch
 
 
 def parse_args():
@@ -72,13 +73,15 @@ def rig_spans():
     bone("cloak.1", (0, 0.02, 0.44), (0, 0.02, 0.28), "hips")
     bone("cloak.2", (0, 0.02, 0.28), (0, 0.02, 0.12), "cloak.1")
     bone("weapon", (-0.16, -0.05, 0.31), (-0.16, -0.15, 0.31), "forearm.R")
+    zs = ZSTRETCH
+    S = {n: ((h[0], h[1], h[2] * zs), (t[0], t[1], t[2] * zs)) for n, (h, t) in S.items()}
     return S, H
 
 
 def cloak_weights(co):
     """Shoulders follow the spine; below the hips the cloak chain takes over
     (13 §3 step 2: the chain is weighted to the cloak's lower rings)."""
-    z = co.z
+    z = co.z / ZSTRETCH               # the weights are authored in rest-height units
 
     def ramp(z, z0, z1):                     # 0 at z0, 1 at z1
         return min(1.0, max(0.0, (z - z0) / (z1 - z0)))
@@ -98,7 +101,7 @@ def build_wanderer(kit):
         parts.append((ob, b))
         return ob
     for side, x in (("L", 1), ("R", -1)):
-        rigid(BC.box(kit, f"boot.{side}", (0.065 * x, -0.005, 0.0375), (0.09, 0.12, 0.075),
+        rigid(BC.box(kit, f"boot.{side}", (0.065 * x, 0.0, 0.0375), (0.09, 0.09, 0.075),
                      "leather", bevel=0.015), f"shin.{side}")
         rigid(K.limb(kit, f"shinmesh.{side}", (0.065 * x, 0, 0.16), (0.065 * x, 0, 0.05),
                      0.038, "cloak"), f"shin.{side}")
@@ -145,8 +148,19 @@ def build_wanderer(kit):
     return parts, cloak
 
 
+def stretch(ob):
+    """Tall figure for a tall box: scale the PART (and its position) in z only.
+    Done per object, BEFORE binding, so a limb that rotates later keeps its
+    stretched shape instead of shearing under a non-uniformly scaled parent."""
+    ob.scale.z *= ZSTRETCH
+    ob.location.z *= ZSTRETCH
+
+
 def build(kit):
     parts, cloak = build_wanderer(kit)
+    for ob, _ in parts:
+        stretch(ob)
+    stretch(cloak)
     spans, parents = rig_spans()
     rig = K.build_armature(kit, spans, parents)
     for ob, b in parts:
@@ -188,8 +202,10 @@ def inspect(scene, co, kit, rig, out, act):
     kit.set_mode("beauty", INSPECT_COLOURS)
     scene.view_settings.view_transform = "Standard"
     scene.cycles.samples = 16
-    scene.render.resolution_x = scene.render.resolution_y = 320
-    co.data.ortho_scale = 1.3
+    cc = act["camera"]
+    cw, ch = cc["box"][0] + 2 * cc["margin_px"], cc["box"][1] + 2 * cc["margin_px"]
+    scene.render.resolution_x, scene.render.resolution_y = cw * 12, ch * 12
+    co.data.ortho_scale = max(cw, ch) / cc["px_per_unit"]
     spec = act["action"]["walk"]
     for d in ("right", "up", "down"):
         K.key_action(rig, f"walk_{d}", spec, d)

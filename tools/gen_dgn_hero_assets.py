@@ -11,9 +11,10 @@ Reads ONLY committed inputs (the build never runs Blender, docs/dungeons/11):
   art/dungeons/actors/sheets.py        the P1/P2 PREVIEW colours (the same
                                        ones the contact sheet shows)
 and emits (byte-identical on re-run):
-  dgnh_obj_chr.bin   3072 B: 96 OBJ tiles, 4bpp. Frame f is a 16x16 OBJ at
-                     name f%8*2 + f//8*32 (tiles N, N+1, N+16, N+17: the
-                     hardware's 16-wide OBJ name table), 8 frames per band
+  dgnh_obj_chr.bin   6144 B: 192 OBJ tiles, 4bpp. Frame f is a 16x32 figure drawn
+                     as TWO stacked 16x16 OBJs: the top at name f%8*2 + f//8*64
+                     (tiles N, N+1, N+16, N+17 of the hardware's 16-wide OBJ name
+                     table), the bottom at that name + 32. 8 frames per band
   dgnh_obj_pal.bin   64 B: OBJ palette 0 = P1, OBJ palette 1 = P2 (BGR555).
                      Indices ARE the roles.toml contract: only colours differ
   dgnh_frames.inc    counts, frame indices, holds and the anchor as ca65
@@ -41,11 +42,13 @@ MODEL = "wanderer"
 # Frame order in the CHR blob. The ROM's animation tables index into this.
 STRIPS = [("idle", "right"), ("idle", "up"), ("idle", "down"),
           ("walk", "right"), ("walk", "up"), ("walk", "down")]
-BAND = 8                     # 16x16 frames per 2-tile-row band (16 tiles wide)
+BAND = 8                     # 16x32 frames per 4-tile-row band (16 tiles wide)
                              # TICK: ok — ANIMATION frames per CHR band: VRAM layout, not time
 BANDS = 3                    # 18 frames -> 3 bands = 96 tile slots
                              # TICK: ok — a count of CHR bands, not of video frames
-BOX = 16
+BOX_W, BOX_H = 16, 32
+TILE_ROWS = BOX_H // 8       # 4 tile rows per frame
+                             # TICK: ok — OBJ tile rows per sprite: pixel geometry, not time
 
 
 def encode_4bpp(tile: np.ndarray) -> bytes:
@@ -70,17 +73,17 @@ def frames(act: dict):
     for name, d in STRIPS:
         a = np.asarray(Image.open(ACTORS / "frames" / f"{MODEL}_{name}_{d}.png"))
         n = act["action"][name]["frames"]
-        assert a.shape == (BOX, BOX * n), f"{name}_{d}: {a.shape}"
-        out += [((name, d), i, a[:, i * BOX:(i + 1) * BOX]) for i in range(n)]
+        assert a.shape == (BOX_H, BOX_W * n), f"{name}_{d}: {a.shape}"
+        out += [((name, d), i, a[:, i * BOX_W:(i + 1) * BOX_W]) for i in range(n)]
     return out
 
 
 def chr_blob(fr) -> bytes:
     assert len(fr) <= BAND * BANDS
-    tiles = [bytes(32)] * (16 * 2 * BANDS)          # unused slots: index 0
+    tiles = [bytes(32)] * (16 * TILE_ROWS * BANDS)  # unused slots: index 0
     for f, (_, _, img) in enumerate(fr):
-        name = (f % BAND) * 2 + (f // BAND) * 32
-        for ty in range(2):
+        name = (f % BAND) * 2 + (f // BAND) * 16 * TILE_ROWS
+        for ty in range(TILE_ROWS):
             for tx in range(2):
                 tiles[name + ty * 16 + tx] = encode_4bpp(img[ty * 8:ty * 8 + 8, tx * 8:tx * 8 + 8])
     return b"".join(tiles)

@@ -7,7 +7,7 @@
 ; --- the lineup: foot points (screen px) -------------------------------------
 DGNH_COL0 = 56
 DGNH_COL_STEP = 48
-DGNH_ROW_WALK = 84       ; P1, walk, four facings
+DGNH_ROW_WALK = 84       ; P1, walk, four facings (foot y; a figure is 32 tall)
 DGNH_ROW_IDLE = 132      ; P2, idle, four facings
 DGNH_ROW_PATH = 188      ; the walker's path
 DGNH_WALK_X0 = 40        ; the walker's first foot x
