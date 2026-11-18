@@ -1,0 +1,300 @@
+# tortoise — a boss on BG2 (docs/dungeons/16): the "Mossback". A moss-and-stone shell whose
+# hexagonal scutes are a ROLE pattern (plates vs seams), four thick IK legs, a neck that
+# bends. It plods on four legs, RISES onto its hind feet, and STOMPS its forelegs down.
+# One facing only: a boss on BG2 faces the player (down).
+name = "tortoise"
+family = "tortoise"
+size_class = "bg"
+shadow = [0.55, 0.45]
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 50
+supersample = 4
+margin_px = 8
+box = [112, 112]
+anchor = [56, 98.0]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.50, 0.50, -0.62]
+
+[[bone]]
+name = "root"
+parent = ""
+head = [0, 0, 0]
+tail = [0, 0, 0.1]
+[[bone]]
+name = "body"                  # pivots at the PELVIS, so a rise tips the front up over planted hind feet
+parent = "root"
+head = [0, 0.25, 0.42]
+tail = [0, -0.25, 0.42]
+[[bone]]
+name = "neck1"
+parent = "body"
+head = [0, -0.34, 0.44]
+tail = [0, -0.54, 0.50]
+[[bone]]
+name = "neck2"
+parent = "neck1"
+head = [0, -0.54, 0.50]
+tail = [0, -0.72, 0.56]
+[[bone]]
+name = "head"
+parent = "neck2"
+head = [0, -0.72, 0.56]
+tail = [0, -0.86, 0.56]
+[[bone]]
+name = "tail"
+parent = "body"
+head = [0, 0.40, 0.36]
+tail = [0, 0.62, 0.28]
+
+# ---- the shell: plates and seams on a hex lattice -------------------------------------------------
+[[part]]
+kind = "dome"
+name = "shell"
+c = [0, 0.02, 0.50]
+r = [0.54, 0.64, 0.42]
+role = "scute"
+seam_role = "seam"
+polar_deg = 98
+cells = 0.27
+plate = 0.07
+seam_w = 0.26
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "body"
+c = [0, 0, 0.36]
+r = [0.37, 0.47, 0.17]
+role = "skin"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "plastron"
+c = [0, 0, 0.27]
+r = [0.35, 0.44, 0.10]
+role = "belly"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "moss1"
+c = [0.17, 0.12, 0.905]
+r = [0.13, 0.11, 0.035]
+role = "moss"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "moss2"
+c = [-0.21, 0.28, 0.82]
+r = [0.10, 0.10, 0.03]
+role = "moss"
+bone = "body"
+[[part]]
+kind = "cone"
+name = "spike1"
+a = [0.0, -0.22, 0.905]
+b = [0.0, -0.26, 1.08]
+radius = 0.065
+role = "claw"
+bone = "body"
+[[part]]
+kind = "cone"
+name = "spike2"
+a = [0.0, -0.02, 0.925]
+b = [0.0, -0.02, 1.12]
+radius = 0.07
+role = "claw"
+bone = "body"
+[[part]]
+kind = "cone"
+name = "spike3"
+a = [0.0, 0.20, 0.90]
+b = [0.0, 0.22, 1.06]
+radius = 0.06
+role = "claw"
+bone = "body"
+[[part]]
+kind = "cone"
+name = "spike4"
+a = [0.26, -0.02, 0.80]
+b = [0.34, -0.02, 0.96]
+radius = 0.05
+role = "claw"
+bone = "body"
+mirror = true
+
+# ---- neck, head, tail ------------------------------------------------------------------------------------
+[[part]]
+kind = "limb"
+name = "neck1"
+a = [0, -0.34, 0.44]
+b = [0, -0.54, 0.50]
+radius = 0.115
+role = "skin"
+bone = "neck1"
+[[part]]
+kind = "limb"
+name = "neck2"
+a = [0, -0.54, 0.50]
+b = [0, -0.72, 0.56]
+radius = 0.105
+role = "skin"
+bone = "neck2"
+[[part]]
+kind = "ellipsoid"
+name = "skull"
+c = [0, -0.80, 0.585]
+r = [0.15, 0.17, 0.125]
+role = "skin"
+bone = "head"
+[[part]]
+kind = "cone"
+name = "beak"
+a = [0, -0.92, 0.55]
+b = [0, -1.03, 0.51]
+radius = 0.075
+role = "claw"
+bone = "head"
+[[part]]
+kind = "ellipsoid"
+name = "eye"
+c = [0.095, -0.865, 0.64]
+r = [0.04, 0.04, 0.04]
+role = "eye"
+bone = "head"
+mirror = true
+[[part]]
+kind = "ellipsoid"
+name = "brow"
+c = [0.09, -0.85, 0.675]
+r = [0.065, 0.06, 0.03]
+role = "scute"
+bone = "head"
+mirror = true
+[[part]]
+kind = "tube"
+name = "tail"
+pts = [[0, 0.40, 0.36, 0.09], [0, 0.52, 0.32, 0.065], [0, 0.64, 0.27, 0.03]]
+role = "skin"
+bone = "tail"
+
+# ---- four IK legs: listed FL, FR, HL, HR (the gait phases assume this order) -----------------------------------
+[[legset]]
+name = "leg"
+parent = "body"
+tags = ["FL", "FR", "HL", "HR"]
+radius = [0.125, 0.105]
+role = "skin"
+knee_lift = 0.08
+knee_out = 0.10
+pole_up = 0.3
+pole_out = 0.2
+center = [0.0, 0.02]
+[legset.pad]
+r = [0.15, 0.19, 0.07]
+role = "skin"
+[legset.claws]
+n = 3
+spread = 0.085
+len = 0.09
+radius = 0.03
+role = "claw"
+[legset.hip]
+FL = [0.30, -0.18, 0.37]
+FR = [-0.30, -0.18, 0.37]
+HL = [0.30, 0.20, 0.37]
+HR = [-0.30, 0.20, 0.37]
+[legset.foot]
+FL = [0.41, -0.24, 0.0]
+FR = [-0.41, -0.24, 0.0]
+HL = [0.41, 0.26, 0.0]
+HR = [-0.41, 0.26, 0.0]
+
+[[locator]]
+name = "eye"
+part = "eye"
+
+# ---- actions ------------------------------------------------------------------------------------------------------
+[action.idle]
+type = "keys"
+frames = 2
+hold = [30, 30]
+[action.idle.keys]
+"body.z" = [0.0, 0.012]
+"neck1.pitch" = [0.0, 3.0]
+"neck2.pitch" = [0.0, -3.0]
+"tail.pitch" = [0.0, 4.0]
+
+[action.plod]
+type = "gait"
+frames = 4
+hold = [10, 10, 10, 10]
+legset = "leg"
+gait = "walk4"
+stride = 0.26
+lift = 0.10
+duty = 0.75
+bob = 0.015
+[action.plod.keys]
+"neck1.pitch" = [2.0, -2.0, 2.0, -2.0]
+"tail.yaw" = [8.0, 0.0, -8.0, 0.0]
+
+# RISE onto the hind feet: the body pitches up about the pelvis (negative pitch = nose up),
+# the hind feet stay planted, the forelegs come off the ground and hang forward.
+[action.rise]
+type = "poses"
+frames = 6
+hold = [8, 8, 8, 8, 8, 12]
+[action.rise.keys]
+"body.pitch" = [0, -12, -28, -46, -62, -70]
+"body.y" = [0, 0, 0, 0, 0, 0]
+"neck1.pitch" = [0, 6, 12, 18, 24, 26]
+"neck2.pitch" = [0, 4, 8, 12, 16, 18]
+"tail.pitch" = [0, -6, -14, -22, -30, -34]
+[action.rise.feet]
+"leg.FL" = ["home", { home = [0.0, 0.0, 0.07] }, { home = [0.02, 0.0, 0.2] }, { home = [0.02, 0.02, 0.36] }, { home = [0.0, 0.05, 0.5] }, { home = [0.0, 0.08, 0.56] }]
+"leg.FR" = ["home", { home = [0.0, 0.0, 0.07] }, { home = [-0.02, 0.0, 0.2] }, { home = [-0.02, 0.02, 0.36] }, { home = [0.0, 0.05, 0.5] }, { home = [0.0, 0.08, 0.56] }]
+"leg.HL" = ["home", "plant", "plant", "plant", "plant", "plant"]
+"leg.HR" = ["home", "plant", "plant", "plant", "plant", "plant"]
+
+# STOMP: from the standing pose, lean back (anticipation), slam the forelegs down (impact: the
+# body dips and squashes), settle, and recover. The hind feet never move.
+[action.stomp]
+type = "poses"
+frames = 5
+hold = [10, 6, 3, 4, 10]
+[action.stomp.keys]
+"body.pitch" = [-70, -80, -14, -2, -22]
+"body.z" = [0.0, 0.02, -0.03, -0.07, -0.02]
+"neck1.pitch" = [26, 34, -4, -8, 6]
+"neck2.pitch" = [18, 26, -2, -6, 4]
+"tail.pitch" = [-34, -40, -6, 0, -10]
+[action.stomp.feet]
+"leg.FL" = [{ home = [0.0, 0.08, 0.56] }, { home = [0.0, 0.14, 0.78] }, { home = [0.0, -0.06, 0.0] }, { home = [0.0, -0.06, 0.0] }, { home = [0.0, 0.04, 0.12] }]
+"leg.FR" = [{ home = [0.0, 0.08, 0.56] }, { home = [0.0, 0.14, 0.78] }, { home = [0.0, -0.06, 0.0] }, { home = [0.0, -0.06, 0.0] }, { home = [0.0, 0.04, 0.12] }]
+"leg.HL" = ["plant", "plant", "plant", "plant", "plant"]
+"leg.HR" = ["plant", "plant", "plant", "plant", "plant"]
+
+# ---- the painter --------------------------------------------------------------------------------------------------------
+[paint]
+cover = 0.45
+smooth = 0.7
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["eye", "claw", "moss"]
+over = ["belly", "skin", "seam", "claw", "moss", "eye", "scute"]
+
+[palette]
+# a slate-blue shell against the moss floor (a green boss on a green floor vanished: 15 §4, 16 §6),
+# warm ochre skin and belly, an amber ember eye, bone claws, and the moss it carries in lime
+base = ["#1c2230", "#363f58", "#586a88", "#8da0bc",
+        "#0e121c", "#222a3c",
+        "#3a3024", "#6a5a40", "#9c8a60",
+        "#b08c58", "#e0c488",
+        "#ff8a2a", "#eadcb8", "#7cc04a", "#070810"]

@@ -238,3 +238,27 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
 - **easy / LOW — the same data-pass contract carried a very different style.**
   Nothing in `blender_common`, the compositor or `pixelate_actor.fit` changed for
   the painter: the look lives entirely in the stage after the render.
+
+## The creature pipeline (2026-11-17)
+
+- **surprise / HIGH — the "hard" parts were the cheap ones.** IK legs on a tetrapod gait, and a body
+  that rises over planted feet, were each a few lines of spec once the generators existed; the pole
+  angle that keeps a knee bending the right way is *fitted* against the rest pose (four candidates,
+  nearest wins) and never needed hand-tuning. The expensive part is the same as always: judging it
+  by eye and fixing the palette, the anchor and the face.
+- **surprise / MEDIUM — my own gait table was wrong and a test caught it.** I listed the 4-leg walk as
+  FL, FR, HL, HR with phases that put a hind foot after the *same-side* front foot. The lateral
+  sequence is FL, HR, FR, HL. A test that asserts the order the feet LEAVE the ground found it.
+- **surprise / MEDIUM — stale bytecode survived a restored plant.** Swapping two numbers does not change
+  a file's length, and a restore inside the same second keeps the old mtime pair, so Python kept the
+  planted `.pyc`. CLAUDE.md records the same class for `make` (`copy2` keeps mtime). *Fix:* clear
+  `__pycache__` after a plant; a harness that does not is reporting its own residue.
+- **clunky / MEDIUM — Blender inspect renders cost 40x what they should.** 10 pixels per sprite pixel at
+  24 samples on a 128 px canvas ran past 400 s; 4 and 4 gave 11 s. Inspect resolution and samples are
+  now arguments (`--iscale`, `--isamples`).
+- **clunky / LOW — the painter had hero names baked in** (outline tables, tiny-feature protection, the
+  contact order). Making it family-agnostic had to keep the hero's output byte-identical; the check
+  was `git status` on the committed hero strips, and it caught that my first repaint loop hid an
+  error behind `>/dev/null`. Never silence the thing you are checking.
+- **easy / LOW — a new size class is a table row.** `budget.SIZE_CLASSES` plus a role family is all a
+  new kind of creature adds to the code; everything else is data.

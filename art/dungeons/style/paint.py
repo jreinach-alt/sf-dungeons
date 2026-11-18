@@ -60,13 +60,13 @@ def snes(hexcol: str) -> tuple:
 
 def palettes(style: dict) -> dict:
     out = {}
-    for k in ("p1", "p2"):
-        cols = style["palette"][k]
+    for k, cols in style["palette"].items():
         assert len(cols) == 15, f"{k}: 15 colours (indices 1-15), got {len(cols)}"
         out[k] = [(0, 0, 0)] + [snes(c) for c in cols]
-    # the swap contract (docs/dungeons/11 §4): P1 and P2 differ in 1-7 only
-    diff = [i for i in range(16) if out["p1"][i] != out["p2"][i]]
-    assert diff == list(range(1, 8)), f"P1/P2 must differ in exactly entries 1-7, got {diff}"
+    # the hero's swap contract (docs/dungeons/11 §4): P1 and P2 differ in 1-7 only
+    if "p1" in out and "p2" in out:
+        diff = [i for i in range(16) if out["p1"][i] != out["p2"][i]]
+        assert diff == list(range(1, 8)), f"P1/P2 must differ in exactly entries 1-7, got {diff}"
     return out
 
 
@@ -99,7 +99,8 @@ def conv3(a: np.ndarray) -> np.ndarray:
 class Painter:
     def __init__(self, style: dict):
         self.style = style
-        self.fam = P.load_family("hero")
+        self.family = style.get("family", "hero")
+        self.fam = P.load_family(self.family)
         pt = style.get("paint", {})
         self.cover = pt.get("cover", 0.5)
         self.smooth = pt.get("smooth", 0.6)
@@ -110,18 +111,26 @@ class Painter:
         self.shadow_mode = pt.get("shadow", "dither")
         self.roles = {r["material"]: dict(r) for r in self.fam.roles}
         self.by_name = {r["name"]: r for r in self.fam.roles}
+        self.no_outline = {self.by_name[n]["material"] for n in pt.get("no_outline", [])}   # thin parts: no ring
         for name, ov in style.get("ramp", {}).items():          # per-style thresholds / votes
             r = self.by_name[name]
             r.update({k: v for k, v in ov.items() if k in ("thresholds", "vote")})
-        om = {"cloak": 1, "trim": 1, "skin": 10, "leather": 10, "glow": 14, "metal": 15, "detail": 15}
+        if self.family == "hero":
+            om = {"cloak": 1, "trim": 1, "skin": 10, "leather": 10, "glow": 14, "metal": 15, "detail": 15}
+            ol = {"cloak": 2, "trim": 2, "skin": 10, "leather": 10, "glow": 14, "metal": 15, "detail": 15}
+        else:
+            # any other family: a ramp's outline is its own darkest step (selout), softer one
+            # step up on the lit side; a fixed role is outlined by the family's outline index
+            om = {r["name"]: (r["lo"] if r["kind"] == "ramp" else self.fam.outline) for r in self.fam.roles}
+            ol = {r["name"]: (r["lo"] + 1 if r["kind"] == "ramp" else self.fam.outline) for r in self.fam.roles}
         om.update(pt.get("outline", {}))
-        self.omap = {self.by_name[n]["material"]: v for n, v in om.items()}
-        ol = {"cloak": 2, "trim": 2, "skin": 10, "leather": 10, "glow": 14, "metal": 15, "detail": 15}
         ol.update(pt.get("outline_lit", {}))
+        self.omap = {self.by_name[n]["material"]: v for n, v in om.items()}
         self.omap_lit = {self.by_name[n]["material"]: v for n, v in ol.items()}
         # who passes OVER whom, for the contact shadow (higher = nearer the viewer)
-        self.over = {self.by_name[n]["material"]: i for i, n in enumerate(
-            pt.get("over", ["skin", "leather", "detail", "metal", "glow", "trim", "cloak"]))}
+        default_over = (["skin", "leather", "detail", "metal", "glow", "trim", "cloak"] if self.family == "hero"
+                        else [r["name"] for r in self.fam.roles])
+        self.over = {self.by_name[n]["material"]: i for i, n in enumerate(pt.get("over", default_over))}
 
     # ---- steps 1-3 ----------------------------------------------------------
     def material_and_steps(self, raw: np.ndarray, ss: int):
@@ -157,7 +166,10 @@ class Painter:
         """A model pixel whose four neighbours share NONE of its material, but two or
         more share another, takes that material: stray pixels become the band around
         them. Lantern glow and steel are small by design and are left alone."""
-        keep = {self.by_name["glow"]["material"], self.by_name["metal"]["material"]}
+        if self.family == "hero":
+            keep = {self.by_name["glow"]["material"], self.by_name["metal"]["material"]}
+        else:                                        # every fixed role is a small feature by design
+            keep = {r["material"] for r in self.fam.roles if r["kind"] == "fixed"}
         for _ in range(2):
             nw = nb4(win, -1)
             out = win.copy()
@@ -267,6 +279,14 @@ class Painter:
                 chosen[mm] = o
             done |= m
         idx[ring & done] = chosen[ring & done]
+        if self.no_outline:                                       # a thin limb is drawn as a clean line
+            for k, _ in order:
+                thin = ring & done & np.isin(nbw[k], list(self.no_outline))
+                # keep the ring pixel only if a NON-thin material also touches it
+                other = np.zeros_like(thin)
+                for j in range(4):
+                    other |= (nbw[j] > 0) & ~np.isin(nbw[j], list(self.no_outline))
+                idx[thin & ~other] = 0
         # shadow
         if self.shadow_mode:
             sh = shadow & ~ring
@@ -292,6 +312,9 @@ class Painter:
                 x, y = ax + dx, ay + dy
                 if 0 <= x < w and 0 <= y < h and (model[y, x] or idx[y, x] != 0):
                     idx[y, x] = ci
+        for s2 in self.style.get("stamps", []):             # the general form: a named locator
+            if s2["locator"] in loc and (not s2.get("dirs") or direction in s2["dirs"]):
+                put(s2["px"], loc[s2["locator"]])
         if "head" in loc:
             key = "face_" + direction
             if key in st:
@@ -337,16 +360,16 @@ def load_style(path: Path) -> dict:
     return tomllib.loads(Path(path).read_text())
 
 
-def run(style_path: Path) -> int:
+def run(style_path: Path, work: Path | None = None, out_root: Path | None = None) -> int:
     style = load_style(style_path)
     name = style["name"]
     pal = palettes(style)
-    src = WORK / f"style_{name}"
+    src = work or (WORK / f"style_{name}")
     log = json.loads((src / "locs.json").read_text())
     painter = Painter(style)
     cam = style["camera"]
     ss, m = cam["supersample"], cam["margin_px"]
-    out = OUT / name
+    out = (out_root or OUT) / name
     out.mkdir(parents=True, exist_ok=True)
     strips: dict = {}
     for f in log["frames"]:
@@ -360,14 +383,20 @@ def run(style_path: Path) -> int:
     for (an, d), fr in strips.items():
         a = np.concatenate(fr, axis=1)
         im = Image.fromarray(a.astype(np.uint8), "P")
-        im.putpalette([c for rgb in pal["p1"] for c in rgb])
+        im.putpalette([c for rgb in pal[sorted(pal)[0]] for c in rgb])
         im.info["transparency"] = 0
         im.save(out / f"{an}_{d}.png", transparency=0)
     (out / "palettes.json").write_text(json.dumps(
-        {"p1": [list(c) for c in pal["p1"]], "p2": [list(c) for c in pal["p2"]]}, indent=1) + "\n")
-    print(f"paint[{name}]: {sum(len(v) for v in strips.values())} frames -> {out.relative_to(REPO)}/")
+        {k: [list(c) for c in v] for k, v in pal.items()}, indent=1) + "\n")
+    print(f"paint[{name}]: {sum(len(v) for v in strips.values())} frames -> {out.resolve().relative_to(REPO)}/")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(run(Path(sys.argv[1])))
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("style", type=Path)
+    ap.add_argument("--work", type=Path, help="the render's data-frame directory (default build/dgn_art_work/style_<name>)")
+    ap.add_argument("--out", type=Path, help="the output root (default art/dungeons/style/out)")
+    a = ap.parse_args()
+    sys.exit(run(a.style, a.work, a.out))

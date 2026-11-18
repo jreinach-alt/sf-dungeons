@@ -1,0 +1,21 @@
+{
+ "class": "obj32",
+ "frames": 9,
+ "per_frame": {
+  "idle_0": 14,
+  "idle_1": 14,
+  "skitter_0": 15,
+  "skitter_1": 14,
+  "skitter_2": 15,
+  "skitter_3": 14,
+  "bite_0": 15,
+  "bite_1": 12,
+  "bite_2": 15
+ },
+ "unique_tiles_all": 125,
+ "rom_bytes_all": 4000,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 4,
+ "max_tiles_one_frame": 15,
+ "name": "spider"
+}

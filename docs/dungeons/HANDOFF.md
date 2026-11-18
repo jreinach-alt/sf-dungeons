@@ -42,6 +42,13 @@ a new painterly stage, judged in a mock Hollow Wood room. **Do not start the
 character system, or change 11 / 13, until the owner chooses (15 §9).**
 Run it: `art/dungeons/style/build_style.sh`.
 
+## 2.2 The creature pipeline (2026-11-17)
+
+`docs/dungeons/16`: a creature is now a data file (`art/dungeons/creatures/specs/`). Proven on a 32×32
+spider (8-leg IK skitter, bite) and a 112×112 BG tortoise boss that plods, rises onto its hind feet
+and stomps, with tile budgets measured. Agent manual: `.claude/skills/creature-art.md`. **Owner
+decisions are in 16 §7 (the quality ceiling, what to build next, size classes).**
+
 ## 3. Next, in order
 
 1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,

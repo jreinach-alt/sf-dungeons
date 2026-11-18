@@ -1,0 +1,197 @@
+# spider — a 32x32 OBJ enemy (docs/dungeons/16): a Hollow Wood "Thornweaver". Eight IK
+# legs on a tetrapod gait, a bark carapace, a glowing sigil on the abdomen, ember eyes.
+name = "spider"
+family = "spider"
+size_class = "obj32"
+shadow = [0.22, 0.16]
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 40
+supersample = 8
+margin_px = 4
+box = [32, 32]
+anchor = [16, 22.0]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.50, 0.50, -0.60]
+
+[[bone]]
+name = "root"
+parent = ""
+head = [0, 0, 0]
+tail = [0, 0, 0.1]
+[[bone]]
+name = "body"
+parent = "root"
+head = [0, 0, 0.15]
+tail = [0, -0.1, 0.15]
+
+# ---- the body ----------------------------------------------------------------------------
+[[part]]
+kind = "ellipsoid"
+name = "cephalothorax"
+c = [0, -0.07, 0.155]
+r = [0.10, 0.12, 0.08]
+role = "carapace"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "abdomen"
+c = [0, 0.125, 0.175]
+r = [0.145, 0.19, 0.125]
+role = "carapace"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "sigil"
+c = [0, 0.125, 0.285]
+r = [0.075, 0.115, 0.035]
+role = "mark"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "eye1"
+c = [0.036, -0.176, 0.185]
+r = [0.022, 0.022, 0.022]
+role = "eye"
+bone = "body"
+mirror = true
+[[part]]
+kind = "ellipsoid"
+name = "eye2"
+c = [0.066, -0.150, 0.198]
+r = [0.016, 0.016, 0.016]
+role = "eye"
+bone = "body"
+mirror = true
+[[part]]
+kind = "cone"
+name = "fang"
+a = [0.032, -0.18, 0.145]
+b = [0.036, -0.245, 0.082]
+radius = 0.018
+role = "fang"
+bone = "body"
+mirror = true
+[[part]]
+kind = "limb"
+name = "palp"
+a = [0.058, -0.15, 0.145]
+b = [0.08, -0.225, 0.105]
+radius = 0.015
+role = "leg"
+bone = "body"
+mirror = true
+[[part]]
+kind = "ellipsoid"
+name = "lichen"
+c = [-0.05, 0.05, 0.248]
+r = [0.035, 0.05, 0.02]
+role = "lichen"
+bone = "body"
+
+# ---- eight IK legs ---------------------------------------------------------------------------
+[[legset]]
+name = "leg"
+parent = "body"
+tags = ["L1", "R1", "L2", "R2", "L3", "R3", "L4", "R4"]
+radius = [0.032, 0.024]
+role = "leg"
+knee_lift = 0.20
+knee_out = 0.06
+pole_up = 0.3
+pole_out = 0.1
+[legset.hip]
+L1 = [0.075, -0.10, 0.155]
+R1 = [-0.075, -0.10, 0.155]
+L2 = [0.095, -0.05, 0.155]
+R2 = [-0.095, -0.05, 0.155]
+L3 = [0.095, 0.01, 0.165]
+R3 = [-0.095, 0.01, 0.165]
+L4 = [0.085, 0.075, 0.165]
+R4 = [-0.085, 0.075, 0.165]
+[legset.foot]
+L1 = [0.28, -0.26, 0.0]
+R1 = [-0.28, -0.26, 0.0]
+L2 = [0.33, -0.12, 0.0]
+R2 = [-0.33, -0.12, 0.0]
+L3 = [0.33, 0.10, 0.0]
+R3 = [-0.33, 0.10, 0.0]
+L4 = [0.28, 0.27, 0.0]
+R4 = [-0.28, 0.27, 0.0]
+
+[[locator]]
+name = "eye"
+part = "eye1"
+
+# ---- actions -------------------------------------------------------------------------------------
+[action.idle]
+type = "keys"
+frames = 2
+hold = [24, 24]
+[action.idle.keys]
+"body.z" = [0.0, -0.012]
+"body.pitch" = [0.0, 2.0]
+
+[action.skitter]
+type = "gait"
+frames = 4
+hold = [4, 4, 4, 4]
+legset = "leg"
+gait = "tetrapod"
+stride = 0.14
+lift = 0.10
+duty = 0.6
+bob = 0.012
+
+# the bite: rear up, strike, recover. Front legs lift and lunge; the rest stay planted.
+[action.bite]
+type = "poses"
+anchor = [14, 22.0]          # a lunge needs headroom in front: the body sits a little further back
+frames = 3
+hold = [8, 4, 10]
+[action.bite.keys]
+"body.pitch" = [-14, 16, 5]
+"body.y" = [0.03, -0.09, -0.02]
+"body.z" = [0.045, -0.01, 0.01]
+[action.bite.feet]
+"leg.L1" = [{ home = [0.0, 0.06, 0.16] }, { home = [-0.02, -0.12, 0.02] }, "home"]
+"leg.R1" = [{ home = [0.0, 0.06, 0.16] }, { home = [0.02, -0.12, 0.02] }, "home"]
+"leg.L2" = ["home", "plant", "plant"]
+"leg.R2" = ["home", "plant", "plant"]
+"leg.L3" = ["home", "plant", "plant"]
+"leg.R3" = ["home", "plant", "plant"]
+"leg.L4" = ["home", "plant", "plant"]
+"leg.R4" = ["home", "plant", "plant"]
+
+# ---- the painter -----------------------------------------------------------------------------------
+[paint]
+cover = 0.42
+smooth = 0.55
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["eye", "fang", "lichen", "detail"]
+no_outline = ["leg"]
+
+[ramp.carapace]
+thresholds = [0.28, 0.5, 0.74]
+[ramp.leg]
+thresholds = [0.34, 0.64]
+
+# eyes: a bright pixel pair on the eye locator; the fang tip is left to the painter
+[[stamps]]
+locator = "eye"
+dirs = ["down"]
+px = [[0, 0, 10], [-5, 0, 10]]
+
+[palette]
+base = ["#1c1612", "#38281c", "#5c4228", "#8e6a3e",
+        "#141a18", "#2e3c38", "#62786a",
+        "#8a3a1c", "#ec8030",
+        "#ffd35a", "#eae2c8", "#7fa064", "#0e0c0a", "#2a2018", "#0a0806"]
