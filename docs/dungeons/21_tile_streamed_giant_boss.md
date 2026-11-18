@@ -148,8 +148,9 @@ measures **19.4°/tick**, inside the bracket the equation gives (18.6 with the p
 * Nothing on hardware; NTSC only; Mesen2's cycle accuracy.
 * The players only walk and idle: no attacks, hurt frames or collision, and no AI (they follow a script).
 * No HUD or text over the boss; no palette animation on the boss (a hit-flash would be a CGRAM write, not tiles).
-* **`make bare-check` has not been run on this work.** The gates that were: width-check, time-check, map-check,
-  cleanroom, rail-registered, register, no-literals (via the build).
+* **`make bare-check` is GREEN on the commit that introduced this work (`b0aae86`)**, on a fresh clone: 2,956 tests
+  passed, 15 skipped, 2,175 s (`build/bare_check.json`, fault reading `none`). It ran on the same box, so it does not
+  buy a different machine or OS image (docs/44).
 * The sequence is one boss. A second boss, or a different order, is a new compile, not new code, but is untested.
 
 ## 6. Decisions for the owner

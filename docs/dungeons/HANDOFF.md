@@ -89,7 +89,7 @@ closed-form equation (`model.equation`) and the director, a greedy scheduler tha
 (that fill IS the limiter) and emits the score `tools/gen_dgn_tile_assets.py` converts. Spin: 30°/tick at the rim,
 ~19° mid-depth, the cut base's load is the pause before each cut. The cost model is FITTED to the console's V
 counter (8.4 mc/B + 1250 mc/command; within a line on 296 frames), worst tick ends on 258 of 261. **`make
-bare-check` has not been run on this work** (the cheap gates have; see 21 §5). Decisions are in 21 §6 (BG vs OBJ reading, is 30° readable).
+bare-check` is green on `b0aae86`** (2,956 passed, 15 skipped; see 21 §5). Decisions are in 21 §6 (BG vs OBJ reading, is 30° readable).
 
 ## 3. Next, in order
 
