@@ -1,0 +1,26 @@
+{
+ "class": "obj64",
+ "frames": 14,
+ "per_frame": {
+  "idle_0": 45,
+  "idle_1": 42,
+  "idle_2": 45,
+  "idle_3": 42,
+  "scuttle_0": 43,
+  "scuttle_1": 44,
+  "scuttle_2": 43,
+  "scuttle_3": 44,
+  "prepare_0": 45,
+  "prepare_1": 44,
+  "prepare_2": 44,
+  "attack_0": 44,
+  "attack_1": 40,
+  "attack_2": 44
+ },
+ "unique_tiles_all": 482,
+ "rom_bytes_all": 15424,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 8,
+ "max_tiles_one_frame": 45,
+ "name": "bellwretch64"
+}

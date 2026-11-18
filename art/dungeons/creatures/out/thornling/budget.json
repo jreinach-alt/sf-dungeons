@@ -1,0 +1,25 @@
+{
+ "class": "obj16",
+ "frames": 13,
+ "per_frame": {
+  "idle_0": 4,
+  "idle_1": 4,
+  "idle_2": 4,
+  "hop_0": 4,
+  "hop_1": 4,
+  "hop_2": 4,
+  "hop_3": 4,
+  "prepare_0": 4,
+  "prepare_1": 4,
+  "prepare_2": 4,
+  "attack_0": 4,
+  "attack_1": 4,
+  "attack_2": 4
+ },
+ "unique_tiles_all": 48,
+ "rom_bytes_all": 1536,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 2,
+ "max_tiles_one_frame": 4,
+ "name": "thornling"
+}

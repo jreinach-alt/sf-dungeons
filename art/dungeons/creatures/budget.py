@@ -21,7 +21,8 @@ SIZE_CLASSES = {
     "obj16":    (16, 16, "obj", 1, 2),
     "obj16x32": (16, 32, "obj", 2, 2),        # two stacked 16x16
     "obj32":    (32, 32, "obj", 1, 4),        # one large OBJ (OBSEL pair 16/32)
-    "obj64":    (64, 64, "obj", 1, 8),        # one large OBJ (OBSEL pair 32/64)
+    "obj64":    (64, 64, "obj", 4, 8),        # FOUR 32x32 OBJs (2x2) under the 16/32 pair docs/dungeons/02 chose; 1 entry needs the 32/64 pair
+                                              # (docs/dungeons/18 §2: measured on the console, same 8 slivers a line)
     "bg":       (0, 0, "bg", 0, 0),           # a boss: any size up to the 32x32 map
 }
 

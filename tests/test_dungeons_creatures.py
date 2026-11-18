@@ -227,6 +227,13 @@ def test_the_budget_report_matches_the_strips_it_describes():
         assert old["unique_tiles_all"] == r["unique_tiles_all"] and old["per_frame"] == r["per_frame"]
 
 
+def test_a_64x64_is_four_32x32_oam_entries_under_the_16_32_pair():
+    """Measured on the console (docs/dungeons/18): size mode 3 has no 64x64, so the boss is a 2x2 of 32x32s.
+    The sliver cost is unchanged at 8 a line."""
+    w, h, kind, entries, slivers = B.SIZE_CLASSES["obj64"]
+    assert (w, h, kind, entries, slivers) == (64, 64, "obj", 4, 8)
+
+
 # --- the generic generators (sugar.py) ---------------------------------------------------------------
 def test_spikes_are_a_deterministic_irregular_ring():
     p = dict(kind="spikes", name="pt", c=[0, 0, 1], n=5, R=0.2, len=[0.1, 0.3], radius=0.05, role="crown", bone="b", seed=4)

@@ -1,0 +1,11 @@
+# dgn_boss — SuperForge Dungeons' boss-battle spike (docs/dungeons/18).
+#
+# One scene: a 64x64 boss, two players (idle / walk / attack), two small enemies, OBJ only, over a
+# floor-coloured backdrop. Every actor runs a scripted timeline with holds quantised to 6 game frames,
+# so the actors' frame changes coincide as often as possible: the worst case for the VBlank budget,
+# on purpose. NOT game/dungeons.
+globals = ["scene_mgr", "input", "fade", "oam_sprites", "dgnb_rom"]
+
+[[scene]]
+id = "arena"
+features = ["backdrop", "dgnb_obj"]

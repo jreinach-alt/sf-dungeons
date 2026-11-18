@@ -1,0 +1,62 @@
+# dgnb_obj — the boss-battle spike's OBJ layer (docs/dungeons/18): a 64x64 boss, two players with
+# attack frames, and two small enemies, as ONE composition.
+#
+# SIZE MODE 3 (OBSEL: small 16x16 / large 32x32), the pair docs/dungeons/02 §3 chose. A 64x64 boss is
+# therefore FOUR 32x32 OBJs (2x2), not one: 4 OAM entries, and the same 8 slivers a line.
+#
+# OBJ CHR is 512 tiles, both name tables contiguous (OBSEL gap 0) = 8,192 words = 16 KB:
+#   table 0, STREAMED from ROM in VBlank: the boss (tile cols 0-7, rows 0-7: one 256 B DMA a tile
+#            row), P1 (cols 8-11, rows 0-3) and P2 (cols 12-15, rows 0-3): 4 DMAs of 128 B each
+#   table 1, RESIDENT, uploaded once at enter: Thornhopper (32x32, rows 0-3), Thornling (16x16, rows 4-5)
+#
+# THE VBLANK DECLARATION IS THE WORST FRAME, and the allocator charges it: boss 2,048 B in 8
+# transfers + two players 2 x 512 B in 4 each = 3,072 B, 16 transfers. With the OAM shadow's 544 B that
+# is 3,616 B + 16 x 128 B arm cost = 5,664 B of the 5,952 pin.
+name = "dgnb_obj"
+role = "consumer"
+depends = ["oam_sprites", "dgnb_rom"]
+
+# The enter-time upload (resident table 1 + the first frames), forced blank.
+[[claims.dma_init]]
+name = "obj_up"
+channel = 0
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+
+# The per-frame stream: GP-DMA in the NMI hook; the core re-arms $43xx afterwards.
+[[claims.hdma]]
+name = "dgnbs"
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+band = "scene"
+phase = "vblank"
+channels = 1
+
+[claims.dma]
+vblank_bytes_per_frame = 3072        # the worst frame: boss + P1 + P2 all change together
+vblank_transfers_per_frame = 16      # 8 + 4 + 4
+
+[[claims.vram]]
+name = "obj_chr"
+kind = "chr"
+obj = true
+words = 8192             # 512 tiles x 16 words: both name tables
+
+[[claims.cgram]]
+name = "obj_pal"
+words = 64               # four 16-colour OBJ palettes
+at = 128
+
+# Pinned: OAM index is sprite priority. 0-1 P1 (top, bottom), 2-3 P2, 4 enemy A, 5 enemy B,
+# 6-9 the boss (TL, TR, BL, BR); 10-11 parked pads so the three hi-table bytes are wholly ours.
+[[claims.oam]]
+name = "actors"
+sprites = 12
+at = 0
+
+[[claims.reg]]
+name = "obj_obsel"
+registers = ["OBSEL"]
+
+[init]
+zero = []

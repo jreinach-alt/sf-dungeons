@@ -27,7 +27,7 @@ LD65    := ld65
 	m7x-assets mode7_explore pfs-assets platformer_stream scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
 	scroller-tb tb-measure tb-picture rate-oracle \
-	camera_follow maze jumper patrol sprite_game dgn_hero stomper scroll_run brawler \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss stomper scroll_run brawler \
 	split_h_matrix_demo split_h_persp3_demo \
 	svd-assets split_v_demo svd-nowin split_v_seamtrial \
 	split_h_demo shd-autodemo shp-assets split_h_persp_demo shp-autodemo \
@@ -444,6 +444,71 @@ $(BUILD)/dgn_hero.sfc: $(DGNH_ASM) $(DGNH)/dgnh.inc \
 	$(PY) tools/fix_checksum.py $@
 
 dgn_hero: $(BUILD)/dgn_hero.sfc
+
+# ---- dgn_boss: the boss-battle spike (docs/dungeons/18) -
+# A 64x64 boss (four 32x32 OBJs), two players that idle / walk / ATTACK, and two small enemies:
+# one scene, OBJ only. The boss and the players are STREAMED from ROM in VBlank (the first
+# obj_stream-shaped code in this tree); the enemies are resident. Every timeline's holds are
+# quantised to 6 frames so the stream's worst frame recurs.
+DGNB      := game/dgn_boss
+DGNB_MAP  := $(BUILD)/dgnb
+DGNB_ASM  := $(DGNB)/main.asm $(wildcard $(DGNB)/scenes/*.asm) \
+             $(wildcard engine/features/*/*.asm)
+DGNB_ART  := $(wildcard art/dungeons/creatures/out/bellwretch64/*.png) \
+             $(wildcard art/dungeons/creatures/out/thornhopper/*.png) \
+             $(wildcard art/dungeons/creatures/out/thornling/*.png) \
+             $(wildcard art/dungeons/creatures/out/*/palettes.json) \
+             $(wildcard art/dungeons/creatures/specs/*.toml) \
+             $(wildcard art/dungeons/style/out/a_storybook/*.png) \
+             art/dungeons/style/out/a_storybook/palettes.json
+
+$(DGNB_MAP)/engine_state_globals.inc $(DGNB_MAP)/symbol_map.json: \
+		allocator/substrate.toml allocator/allocate.py allocator/schemas.py \
+		$(wildcard engine/features/*/feature.toml) $(DGNB)/game.toml \
+		$(DGNB)/state.toml | $(BUILD)
+	$(PY) allocator/allocate.py --game $(DGNB) --features-dir engine/features \
+		--out $(DGNB_MAP)
+
+$(BUILD)/assets/dgnb_boss_down.bin $(BUILD)/assets/dgnb_boss_right.bin \
+$(BUILD)/assets/dgnb_hero.bin $(BUILD)/assets/dgnb_res.bin \
+$(BUILD)/assets/dgnb_pal.bin $(BUILD)/assets/dgnb_frames.inc: \
+		tools/gen_dgn_boss_assets.py tools/gen_dgn_hero_assets.py $(DGNB_ART) | $(BUILD)
+	$(PY) tools/gen_dgn_boss_assets.py $(BUILD)/assets
+
+$(BUILD)/dgn_boss.sfc: $(DGNB_ASM) $(DGNB)/dgnb.inc \
+		$(DGNB_MAP)/engine_state_globals.inc \
+		$(BUILD)/assets/dgnb_boss_down.bin $(BUILD)/assets/dgnb_boss_right.bin \
+		$(BUILD)/assets/dgnb_hero.bin $(BUILD)/assets/dgnb_res.bin \
+		$(BUILD)/assets/dgnb_pal.bin $(BUILD)/assets/dgnb_frames.inc \
+		$(VROM)/header.inc $(VROM)/init.inc $(VROM)/ppu_reset.inc \
+		$(VROM)/lorom_512k.cfg | $(BUILD)
+	$(PY) allocator/no_literals.py --map $(DGNB_MAP)/symbol_map.json $(DGNB_ASM)
+	$(CA65) -I $(DGNB_MAP) -I $(VROM) -I $(DGNB) -I $(BUILD)/assets \
+		-I engine/features/scene_mgr -I engine/features/input \
+		-I engine/features/fade \
+		-I engine/features/oam_sprites \
+		-I engine/features/dgnb_obj \
+		--bin-include-dir $(BUILD)/assets \
+		-o $(BUILD)/dgn_boss.o $(DGNB)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_boss.o
+	$(PY) tools/fix_checksum.py $@
+
+dgn_boss: $(BUILD)/dgn_boss.sfc
+
+# The PLANTED FAULT: the same ROM with the boss streamed twice a frame (`-D DGNB_OVERLOAD`). Its worst
+# frame cannot finish inside VBlank; tests/test_dgn_boss.py requires every detector to fire on it.
+$(BUILD)/dgn_boss_overload.sfc: $(BUILD)/dgn_boss.sfc $(DGNB_ASM) $(DGNB)/dgnb.inc
+	$(CA65) -D DGNB_OVERLOAD=1 -I $(DGNB_MAP) -I $(VROM) -I $(DGNB) -I $(BUILD)/assets \
+		-I engine/features/scene_mgr -I engine/features/input \
+		-I engine/features/fade \
+		-I engine/features/oam_sprites \
+		-I engine/features/dgnb_obj \
+		--bin-include-dir $(BUILD)/assets \
+		-o $(BUILD)/dgn_boss_overload.o $(DGNB)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_boss_overload.o
+	$(PY) tools/fix_checksum.py $@
+
+dgn_boss_overload: $(BUILD)/dgn_boss_overload.sfc
 
 # ---- shmup: the vertical shooter ----------------
 # The rail that debuts POOL. Its BG feature (shmup_bg) owns both co-resident
@@ -3409,7 +3474,7 @@ gates: | $(BUILD)
 	run aurora; \
 	run camera_follow; run maze; run jumper; run patrol; \
 	run sprite_game; \
-	run dgn_hero; \
+	run dgn_hero; run dgn_boss; \
 	run stomper; \
 	run scroll_run; run split_h_demo; run shd-autodemo; \
 	run brawler; \
@@ -3430,7 +3495,7 @@ gates: | $(BUILD)
 	cat $(BUILD)/gates_summary.txt; \
 	for rom in microzero room breaker shmup platformer split_v_fight m7_dungeon \
 	           split_h_2p_demo mode7_explore platformer_stream hud_game \
-	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero \
+	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss \
 	           stomper scroll_run brawler \
 	           split_h_matrix_demo split_h_persp3_demo split_v_demo \
 	           split_v_seamtrial split_h_demo split_h_persp_demo \
@@ -3605,7 +3670,7 @@ PYTEST_DIST := $(if $(strip $(XDIST)),-n $(strip $(XDIST)) --dist loadfile,)
 # tools/harness_faults.py then says which KIND of red it is (docs/44 section 8).
 test: toy microzero room probes breaker shmup platformer split_v_fight \
 	m7_dungeon split_h_2p_demo sh2-variants mode7_explore platformer_stream \
-	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero \
+	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss \
 	stomper \
 	scroll_run brawler split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
@@ -3851,7 +3916,7 @@ MODULE  ?= tests/test_split_h_2p_sprites.py
 FALSIFY ?=
 determinism: split_h_2p_demo sh2-variants microzero hud_game scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
-	camera_follow maze jumper patrol sprite_game dgn_hero stomper scroll_run \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss stomper scroll_run \
 	brawler split_v_fight split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
 	split_h_persp_demo shp-autodemo racer mode7_chamber railshooter rs-probe \

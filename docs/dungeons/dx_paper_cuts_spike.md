@@ -283,3 +283,24 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
   repeated limbs, a `chain` generator in the spec (like `legset`) is the next shorthand to add.
 - **easy / LOW — silhouette-first design worked.** One mass plus one accent colour per creature made them
   separable before shading (17 §5.4).
+
+## The boss-battle scene (2026-11-18)
+
+- **surprise / HIGH — `Machine.screenshot()` spends a frame, and the picture is the NEXT one.** Documented
+  in `machine.py`, but nothing in a test's shape reminds you. Read state after the call and a moving sprite
+  is 1 px off and every actor that changed frame is the wrong one; it looked like a rendering bug for an hour.
+  *Fix:* a `Machine.photograph()` that returns (state-before, picture) as a pair, or have the screenshot
+  helper in `conftest` take the reads it wants, so the order cannot be got wrong.
+- **surprise / MEDIUM — the allocator's VBlank charge is conservative and says nothing about the margin.**
+  It accepted the worst frame at 5,664 of 5,952 B (288 B headroom); the machine had about 6 lines. The model's
+  per-transfer arm cost (128 B-eq) is higher than measured (~85). Worth a measured probe for a
+  *many-small-transfers* shape, which is what a tile-row stream is.
+- **clunky / MEDIUM — no rail-level template.** A new rail is ten registration sites, a Makefile block of
+  ~40 lines, a `state.toml` whose every frame-named word needs a `TICK: ok` and a feature-lint contract per
+  exported routine. The gates are right, and each one found a real omission; but a `tools/new_rail.py`
+  that stamps all of it from `dgn_hero` would have saved most of the time.
+- **clunky / LOW — a planted-fault build variant is a Makefile rule by hand.** `dgn_boss_overload` is a copy
+  of the real recipe with `-D`. A `make variant ROM=... DEFINE=...` would remove the duplication.
+- **easy / LOW — the V-counter latch is a 4-instruction measurement tool** (`$213F`, `$2137`, `$213D` ×2)
+  and turned "does it fit in VBlank?" from arithmetic into a number read per frame. Worth a shared
+  `vblank_probe` feature.

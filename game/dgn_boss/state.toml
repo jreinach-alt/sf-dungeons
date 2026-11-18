@@ -1,0 +1,33 @@
+# dgn_boss state. All scene-scoped @dp words; written in enter before any read (rule 5).
+# TICK: ok on every word — each is an ANIMATION-timeline index or a hold countdown in game frames
+# (docs/dungeons/02 §7, class-B countdowns), or a frame id; none is a speed.
+
+[scene.arena]
+b_i = "u16@dp"          # boss timeline index
+b_cnt = "u16@dp"        # game frames left on the boss's current hold.
+                        # TICK: ok — a class-B countdown on actions.toml-style holds, docs/dungeons/02 §7
+a_i = "u16@dp"          # player 1's
+a_cnt = "u16@dp"
+c_i = "u16@dp"          # player 2's
+c_cnt = "u16@dp"
+ea_i = "u16@dp"         # enemy A (32x32)
+ea_cnt = "u16@dp"
+eb_i = "u16@dp"         # enemy B (16x16)
+eb_cnt = "u16@dp"
+t = "u16@dp"            # a free-running frame counter: the enemies' ping-pong.
+                        # TICK: ok — a spike-only phase counter (one step is one px of ping-pong), not a rate
+want_b = "u16@dp"       # the boss frame the NMI must have streamed (0-27).
+                        # TICK: ok — an ANIMATION frame id (an index into the strips), not a video frame
+want_a = "u16@dp"       # player 1's slot (0-8)
+want_c = "u16@dp"       # player 2's slot (0-8)
+have_b = "u16@dp"       # what VRAM holds now ($FFFF = nothing yet)
+have_a = "u16@dp"
+have_c = "u16@dp"
+tmp = "u16@dp"          # placement scratch
+tmp2 = "u16@dp"
+x_s = "u16@dp"          # stream scratch: dest VMADD
+y_s = "u16@dp"          # stream scratch: source address
+vend = "u16@dp"         # the V counter at the END of the NMI hook (the slack measurement)
+vmax = "u16@dp"         # its maximum so far
+s77 = "u16@dp"          # STAT77 bits 6-7 (time over / range over), OR-ed over every frame so far.
+                        # TICK: ok — a latched hardware flag, no time unit
