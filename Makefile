@@ -27,7 +27,7 @@ LD65    := ld65
 	m7x-assets mode7_explore pfs-assets platformer_stream scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
 	scroller-tb tb-measure tb-picture rate-oracle \
-	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant stomper scroll_run brawler \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant dgn_colossus stomper scroll_run brawler \
 	split_h_matrix_demo split_h_persp3_demo \
 	svd-assets split_v_demo svd-nowin split_v_seamtrial \
 	split_h_demo shd-autodemo shp-assets split_h_persp_demo shp-autodemo \
@@ -629,6 +629,61 @@ $(BUILD)/dgn_giant_plant.sfc: $(BUILD)/dgn_giant.sfc $(DGNG_ASM)
 
 dgn_giant: $(BUILD)/dgn_giant.sfc
 dgn_giant_plant: $(BUILD)/dgn_giant_plant.sfc
+
+# ---- dgn_colossus: the TILE-STREAMED giant boss (docs/dungeons/21) -
+# The Crownling as a SET OF PICTURES on two page-flipped Mode 1 BG layers, the room's floor on a third, two OBJ players.
+# A spin is a sequence of pictures streamed into VRAM, so the VBlank DMA budget, VRAM and ROM are the limiter: the score
+# is SOLVED by tools/dgn_tilestream/director.py. `dgn_colossus_late` plays each tick's DMA commands one tick LATE and
+# `dgn_colossus_early` shows the next record's layer one tick early: the planted faults the picture test must catch.
+DGNT      := game/dgn_colossus
+DGNT_MAP  := $(BUILD)/dgnc
+DGNT_ASM  := $(DGNT)/main.asm $(wildcard $(DGNT)/scenes/*.asm) \
+             $(wildcard engine/features/*/*.asm)
+DGNT_ART  := $(wildcard art/dungeons/creatures/out/crownling_giant/*.png) \
+             art/dungeons/creatures/out/crownling_giant/palettes.json \
+             $(wildcard art/dungeons/style/out/a_storybook/*.png) \
+             art/dungeons/style/out/a_storybook/palettes.json \
+             tools/gen_dgn_tile_assets.py tools/gen_dgn_fight_assets.py tools/gen_dgn_hero_assets.py \
+             $(wildcard tools/dgn_tilestream/*.py) $(wildcard tools/dgn_fight/*.py) $(wildcard tools/dgn_giant/*.py)
+DGNT_BINS := dgnt_pool0.bin dgnt_pool1.bin dgnt_pool2.bin dgnt_pool3.bin dgnt_pool4.bin dgnt_pool5.bin dgnt_pool6.bin \
+             dgnt_hero.bin dgnt_floor.bin dgnt_pal.bin dgnt_score.bin dgnt_cmds.bin dgnt_ptr.bin dgnt_frames.inc
+
+$(DGNT_MAP)/engine_state_globals.inc $(DGNT_MAP)/symbol_map.json: \
+		allocator/substrate.toml allocator/allocate.py allocator/schemas.py \
+		$(wildcard engine/features/*/feature.toml) $(DGNT)/game.toml \
+		$(DGNT)/state.toml | $(BUILD)
+	$(PY) allocator/allocate.py --game $(DGNT) --features-dir engine/features \
+		--out $(DGNT_MAP)
+
+$(addprefix $(BUILD)/assets_colossus/,$(DGNT_BINS)): $(DGNT_ART) | $(BUILD)
+	$(PY) tools/gen_dgn_tile_assets.py $(BUILD)/assets_colossus
+
+DGNT_CA65 = $(CA65) -I $(DGNT_MAP) -I $(VROM) -I $(DGNT) \
+	-I engine/features/scene_mgr -I engine/features/input -I engine/features/fade \
+	-I engine/features/oam_sprites -I engine/features/dgnt_obj -I engine/features/dgnt_bg \
+	-I $(BUILD)/assets_colossus --bin-include-dir $(BUILD)/assets_colossus
+
+$(BUILD)/dgn_colossus.sfc: $(DGNT_ASM) $(DGNT_MAP)/engine_state_globals.inc \
+		$(addprefix $(BUILD)/assets_colossus/,$(DGNT_BINS)) \
+		$(VROM)/header.inc $(VROM)/init.inc $(VROM)/ppu_reset.inc $(VROM)/lorom_512k.cfg | $(BUILD)
+	$(PY) allocator/no_literals.py --map $(DGNT_MAP)/symbol_map.json $(DGNT_ASM)
+	$(DGNT_CA65) -o $(BUILD)/dgn_colossus.o $(DGNT)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_colossus.o
+	$(PY) tools/fix_checksum.py $@
+
+$(BUILD)/dgn_colossus_late.sfc: $(BUILD)/dgn_colossus.sfc $(DGNT_ASM)
+	$(DGNT_CA65) -D DGNT_LATE=1 -o $(BUILD)/dgn_colossus_late.o $(DGNT)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_colossus_late.o
+	$(PY) tools/fix_checksum.py $@
+
+$(BUILD)/dgn_colossus_early.sfc: $(BUILD)/dgn_colossus.sfc $(DGNT_ASM)
+	$(DGNT_CA65) -D DGNT_EARLY=1 -o $(BUILD)/dgn_colossus_early.o $(DGNT)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_colossus_early.o
+	$(PY) tools/fix_checksum.py $@
+
+dgn_colossus: $(BUILD)/dgn_colossus.sfc
+dgn_colossus_late: $(BUILD)/dgn_colossus_late.sfc
+dgn_colossus_early: $(BUILD)/dgn_colossus_early.sfc
 
 # ---- shmup: the vertical shooter ----------------
 # The rail that debuts POOL. Its BG feature (shmup_bg) owns both co-resident
@@ -3594,7 +3649,7 @@ gates: | $(BUILD)
 	run aurora; \
 	run camera_follow; run maze; run jumper; run patrol; \
 	run sprite_game; \
-	run dgn_hero; run dgn_boss; run dgn_fight; run dgn_giant; \
+	run dgn_hero; run dgn_boss; run dgn_fight; run dgn_giant; run dgn_colossus; \
 	run stomper; \
 	run scroll_run; run split_h_demo; run shd-autodemo; \
 	run brawler; \
@@ -3615,7 +3670,7 @@ gates: | $(BUILD)
 	cat $(BUILD)/gates_summary.txt; \
 	for rom in microzero room breaker shmup platformer split_v_fight m7_dungeon \
 	           split_h_2p_demo mode7_explore platformer_stream hud_game \
-	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant \
+	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant dgn_colossus \
 	           stomper scroll_run brawler \
 	           split_h_matrix_demo split_h_persp3_demo split_v_demo \
 	           split_v_seamtrial split_h_demo split_h_persp_demo \
@@ -3790,7 +3845,7 @@ PYTEST_DIST := $(if $(strip $(XDIST)),-n $(strip $(XDIST)) --dist loadfile,)
 # tools/harness_faults.py then says which KIND of red it is (docs/44 section 8).
 test: toy microzero room probes breaker shmup platformer split_v_fight \
 	m7_dungeon split_h_2p_demo sh2-variants mode7_explore platformer_stream \
-	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant \
+	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant dgn_colossus \
 	stomper \
 	scroll_run brawler split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
@@ -4036,7 +4091,7 @@ MODULE  ?= tests/test_split_h_2p_sprites.py
 FALSIFY ?=
 determinism: split_h_2p_demo sh2-variants microzero hud_game scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
-	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant stomper scroll_run \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant dgn_colossus stomper scroll_run \
 	brawler split_v_fight split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
 	split_h_persp_demo shp-autodemo racer mode7_chamber railshooter rs-probe \

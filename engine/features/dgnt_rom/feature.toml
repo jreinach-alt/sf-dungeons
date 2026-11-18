@@ -1,0 +1,64 @@
+# dgnt_rom — the tile-streamed giant boss's art and SCORE, as ROM data (docs/dungeons/21).
+#
+# Converted by tools/gen_dgn_tile_assets.py from COMMITTED pictures; the build never runs Blender. A GLOBAL blob
+# feature for the reason sprg_rom states. Each claim site in game/dgn_colossus/main.asm .asserts its blob's
+# bank/addr against the allocator's emitted symbols.
+#
+# THE ROM BUDGET IS THE CLAIMS. The boss's pictures (every rotation picture at each depth, the cut bases, the
+# blade-extension tiles, their tilemaps) live in SEVEN 28,672 B pool claims, packed so no DMA run crosses a bank. If
+# the director needs an eighth the generator REFUSES; that refusal is the ROM half of the equation in
+# docs/dungeons/21: more pictures, or deeper ones, or a finer rotation step, cost claims.
+name = "dgnt_rom"
+role = "blob"
+
+[[claims.rom]]
+name = "dgnt_pool0_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 0
+
+[[claims.rom]]
+name = "dgnt_pool1_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 1
+
+[[claims.rom]]
+name = "dgnt_pool2_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 2
+
+[[claims.rom]]
+name = "dgnt_pool3_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 3
+
+[[claims.rom]]
+name = "dgnt_pool4_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 4
+
+[[claims.rom]]
+name = "dgnt_pool5_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 5
+
+[[claims.rom]]
+name = "dgnt_pool6_rom"
+bytes = 28672            # boss tile and tilemap data, pool block 6
+
+[[claims.rom]]
+name = "dgnt_hero_rom"
+bytes = 9216             # the players' 18 frames x 512 B (4x4-tile slot images), streamed with back buffers
+
+[[claims.rom]]
+name = "dgnt_floor_rom"
+bytes = 2176             # the floor: 8 tiles of 2bpp (128 B) + the 32x32 map (2,048 B)
+
+[[claims.rom]]
+name = "dgnt_pal_rom"
+bytes = 104              # BG palette 2 (16 words), the floor's BG3 palette 0 (4 words), OBJ palettes P1 and P2 (32 words)
+
+[[claims.rom]]
+name = "dgnt_score_rom"
+bytes = 16384            # T ticks x 20 B: 4 OAM entries, the hi byte, TM (which boss layer), BG VOFS
+
+[[claims.rom]]
+name = "dgnt_cmds_rom"
+bytes = 8192             # the DMA commands, 8 B each, the entry-state commands last
+
+[[claims.rom]]
+name = "dgnt_ptr_rom"
+bytes = 2048             # T + 2 u16 byte offsets into the command stream

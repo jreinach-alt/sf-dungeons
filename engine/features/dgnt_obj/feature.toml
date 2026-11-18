@@ -1,0 +1,49 @@
+# dgnt_obj — the colossus's players and its SCORE PLAYER (docs/dungeons/21).
+#
+# Each tick the main thread copies one 20 B record of the score: the four OAM entries of the two players, the hi byte,
+# TM (which boss layer is shown) and the boss's BG VOFS (the last two into dgnt_bg's shadow). The NMI hook commits TM and
+# VOFS, then plays that tick's DMA COMMANDS: the boss's tiles and tilemap rows, the blade patches, the players' rows.
+# A command is (destination offset, source offset, blob, kind, length); `kind` picks which VRAM region the
+# destination is relative to (BG1 CHR, BG2 CHR, BG1 map, BG2 map, OBJ CHR) and `blob` picks the ROM claim.
+name = "dgnt_obj"
+role = "consumer"
+depends = ["oam_sprites", "dgnt_rom", "dgnt_bg"]
+
+[[claims.hdma]]
+name = "dgnts"
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+band = "scene"
+phase = "vblank"
+channels = 1
+
+# THE WORST TICK OF THE SCORE. The director fills each tick's capacity (that IS the solver), so this is the budget it
+# solved against: 3 transfers of up to 3.3 KB. The allocator charges it against the 5,952 pin.
+[claims.dma]
+vblank_bytes_per_frame = 3600
+vblank_transfers_per_frame = 4
+
+# SIZE MODE 3 (small 16x16 / large 32x32). The players' four 16-tile slots use one name table's first rows.
+[[claims.vram]]
+name = "obj_chr"
+kind = "chr"
+obj = true
+words = 2048
+
+[[claims.cgram]]
+name = "obj_pal"
+words = 32
+at = 128
+
+# 0-1 player 1 (top, bottom), 2-3 player 2: one whole hi-table byte
+[[claims.oam]]
+name = "actors"
+sprites = 4
+at = 0
+
+[[claims.reg]]
+name = "obj_obsel"
+registers = ["OBSEL"]
+
+[init]
+zero = []

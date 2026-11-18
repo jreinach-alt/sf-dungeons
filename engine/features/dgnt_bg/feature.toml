@@ -1,0 +1,77 @@
+# dgnt_bg — the colossus's BG layers (docs/dungeons/21): the boss on TWO page-flipped layers, the room's floor on a third.
+#
+# MODE 1. BG1 and BG2 are the boss's two BUFFERS: the director loads the next picture into whichever is off screen and
+# the swap is one TM write (BG1 on / BG2 off or the reverse). Both use the same 16-colour palette (BG palette 2,
+# CGRAM 32..47: BG3's 2bpp palettes own words 0..31, the rule shmup_bg records). BG3 is the ROOM's floor: 2bpp, four
+# colours, always on, lowest priority, so the boss is in front of it and the room is not lost, which is why this
+# is not Mode 7.
+#
+# EACH BOSS LAYER is a 32x64-cell tilemap (4 KB: the picture is 360 px tall) over its own CHR region of up to 304
+# tiles. A picture is a TILEMAP (static per picture: slot numbers) and the TILES in those slots; the scroll register
+# BG1VOFS/BG2VOFS slides it, for free, and is the only per-tick register besides TM.
+#
+# CPU-WRITTEN REGISTERS, DECLARED: TM and both VOFS are written every tick in the NMI hook from a DP shadow the tick
+# fills (the m7_affine idiom: nothing touches a PPU port outside VBlank).
+name = "dgnt_bg"
+role = "feature"
+depends = ["dgnt_rom"]
+
+[[claims.dma_init]]
+name = "bg_up"
+channel = 0
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+
+[[claims.vram]]
+name = "bga_chr"
+kind = "chr"
+tiles = 304              # BG1: slot 0 is the blank; the director's largest picture uses 300
+tile_bytes = 32
+
+[[claims.vram]]
+name = "bgb_chr"
+kind = "chr"
+tiles = 304              # BG2: the other buffer
+tile_bytes = 32
+
+[[claims.vram]]
+name = "bga_map"
+kind = "tilemap"
+words = 0x800
+shape = "32x64"            # 32 x 64 cells: the 360 px picture
+
+[[claims.vram]]
+name = "bgb_map"
+kind = "tilemap"
+words = 0x800
+shape = "32x64"
+
+[[claims.vram]]
+name = "fl_chr"
+kind = "chr"
+tiles = 8                # the floor: 8 tiles of 2bpp
+tile_bytes = 16
+
+[[claims.vram]]
+name = "fl_map"
+kind = "tilemap"
+words = 0x400            # 32 x 32
+
+[[claims.cgram]]
+name = "boss_pal"
+words = 16
+at = 32                  # BG 4bpp palette 2
+
+[[claims.cgram]]
+name = "floor_pal"
+words = 4
+at = 0                   # BG3 2bpp palette 0. WORD 0 is the backdrop: the floor's darkest moss
+
+[[claims.dp]]
+name = "bgsh"
+bytes = 4                # +0 TM, +2 BG VOFS (u16): written by the tick, committed by the NMI hook
+
+[[claims.reg]]
+name = "bg_layers"
+registers = ["BG1SC", "BG2SC", "BG3SC", "BG12NBA", "BG34NBA", "BG1HOFS", "BG1VOFS", "BG2HOFS", "BG2VOFS",
+             "BG3HOFS", "BG3VOFS", "BGMODE", "TM"]

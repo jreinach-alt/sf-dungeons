@@ -5,6 +5,11 @@
 > Crownling. Have it slide forward and spin as quickly as we can animate it as it slices three times at 45, 90 and
 > 135 degrees while the players dodge, then retract.
 >
+> **Superseded as the answer to the brief by [21](21_tile_streamed_giant_boss.md).** The owner's correction: Mode 7
+> spins for free, so nothing limits the spin, and it takes the room's background layer; the point of "as fast as we
+> can animate it" was that the sprite/tile-streaming budget is the limiter. This doc and `dgn_giant` stay as the
+> record of the Mode 7 route (right for a boss that only spins and swoops and needs no background).
+>
 > **Short answer: Mode 7, and it is nearly free.** The boss is *one still image* on the Mode 7 plane; the spin, the
 > magnification, the slide and the pivot are the PPU's matrix registers, four words and a scroll a frame. The whole
 > scene (the 256-px boss spinning at up to 45° a tick, two streamed players, the OAM) finishes its VBlank work on

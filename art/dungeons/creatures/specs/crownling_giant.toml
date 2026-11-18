@@ -1,0 +1,207 @@
+# crownling_giant — the GIANT Crownling as a SET OF PICTURES for the tile-streaming boss (docs/dungeons/21).
+# Rendered looking straight DOWN (depression 90), so rotating the image about its centre is the crown spinning
+# on its own vertical axis. One still pose; the plane is rotated, scaled and slid by the PPU's matrix.
+# A flat rosette: an ivory shell with five uneven radial points, a violet eye in the middle, four tendrils
+# between the points, and one long violet BLADE (the brief's beam) along -Y, the image's "forward" (down).
+# 256 unique 8x8 tiles is the whole budget (Mode 7 has one 128x128 map and 256 tiles of 8bpp CHR), so the
+# crown is 128 px across at 1x: the matrix magnifies it 2x to fill the top of the screen. The blade runs 120 px
+# (240 on screen) from the eye, so a slice reaches the players at the bottom.
+name = "crownling_giant"
+family = "crownling"
+size_class = "bg"
+shadow = [0.001, 0.001]
+
+[camera]
+depression_deg = 90.0
+px_per_unit = 194
+supersample = 4
+margin_px = 4
+box = [256, 360]
+anchor = [128, 136]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.35, 0.45, -0.82]
+
+[default.keys]
+
+[[bone]]
+name = "root"
+parent = ""
+head = [0, 0, 0]
+tail = [0, 0, 0.1]
+[[bone]]
+name = "body"
+parent = "root"
+head = [0, 0, 0.2]
+tail = [0, -0.1, 0.2]
+[[bone]]
+name = "bladeb"
+parent = "body"
+head = [0, 0, 0.30]
+tail = [0, -0.2, 0.30]
+
+
+[[part]]
+kind = "lathe"
+name = "shell"
+c = [0, 0, 0.0]
+pts = [[0.46, 0.20], [0.45, 0.25], [0.40, 0.28], [0.30, 0.25], [0.22, 0.20]]
+roles = ["crown", "crack", "crown", "crown"]
+role = "crown"
+bone = "body"
+nu = 40
+
+[[part]]
+kind = "cone"
+name = "point0"
+a = [0.376, 0.137, 0.23]
+b = [0.573, 0.209, 0.23]
+radius = 0.075
+role = "crown"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "cone"
+name = "point1"
+a = [-0.035, 0.398, 0.23]
+b = [-0.057, 0.648, 0.23]
+radius = 0.075
+role = "crown"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "cone"
+name = "point2"
+a = [-0.376, 0.137, 0.23]
+b = [-0.554, 0.202, 0.23]
+radius = 0.075
+role = "crown"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "cone"
+name = "point3"
+a = [-0.229, -0.328, 0.23]
+b = [-0.367, -0.524, 0.23]
+radius = 0.075
+role = "crown"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "cone"
+name = "point4"
+a = [0.229, -0.328, 0.23]
+b = [0.356, -0.508, 0.23]
+radius = 0.075
+role = "crown"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "limb"
+name = "tend0"
+a = [0.074, 0.119, 0.27]
+b = [0.212, 0.339, 0.255]
+radius = 0.050
+role = "tendril"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "limb"
+name = "tend1"
+a = [-0.086, 0.110, 0.27]
+b = [-0.246, 0.315, 0.255]
+radius = 0.050
+role = "tendril"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "limb"
+name = "tend2"
+a = [-0.133, -0.043, 0.27]
+b = [-0.380, -0.124, 0.255]
+radius = 0.050
+role = "tendril"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "limb"
+name = "tend3"
+a = [-0.000, -0.140, 0.27]
+b = [-0.000, -0.400, 0.255]
+radius = 0.050
+role = "tendril"
+bone = "body"
+seg = 8
+
+[[part]]
+kind = "ellipsoid"
+name = "eye"
+c = [0, 0, 0.30]
+r = [0.17, 0.17, 0.12]
+role = "eye"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "pupil"
+c = [0, -0.02, 0.40]
+r = [0.075, 0.075, 0.03]
+role = "pupil"
+bone = "body"
+# the blade: a long violet beam along -Y (the image's forward = down), from the eye to the box edge
+[[part]]
+kind = "cone"
+name = "blade"
+a = [0, -0.12, 0.30]
+b = [0, -0.85, 0.30]
+radius = 0.085
+role = "beam"
+bone = "bladeb"
+seg = 10
+
+# THE SET (docs/dungeons/21), as two actions so the extension frames can be re-rendered alone.
+# `spin`: 24 pictures, the crown turned 15 degrees x k CLOCKWISE (yaw is counter-clockwise, so yaw = -phi, measured
+# against a rotated copy of frame 0), the blade a stub at 0.2 of its length.
+# `ext`: the blade at 0.45, 0.7 and 1.0 of its length at the three cut headings (k = 21, 0, 3: blade at 45, 90, 135).
+[action.spin]
+type = "keys"
+frames = 24
+hold = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+[action.spin.keys]
+"body.yaw" = [-0.0, -15.0, -30.0, -45.0, -60.0, -75.0, -90.0, -105.0, -120.0, -135.0, -150.0, -165.0, -180.0, -195.0, -210.0, -225.0, -240.0, -255.0, -270.0, -285.0, -300.0, -315.0, -330.0, -345.0]
+"bladeb.scale" = [0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20]
+
+[action.ext]
+type = "keys"
+frames = 9
+hold = [1, 1, 1, 1, 1, 1, 1, 1, 1]
+[action.ext.keys]
+"body.yaw" = [-315.0, -315.0, -315.0, -0.0, -0.0, -0.0, -45.0, -45.0, -45.0]
+"bladeb.scale" = [0.45, 0.70, 1.00, 0.45, 0.70, 1.00, 0.45, 0.70, 1.00]
+
+[paint]
+cover = 0.42
+smooth = 0.6
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = false
+no_rim = ["crack", "pupil", "beam", "detail"]
+over = ["detail", "tendril", "eye", "pupil", "crack", "crown", "beam"]
+
+[palette]
+base = ["#5e504c", "#a09088", "#d8cabc", "#f8f0e0",
+        "#2a1c26",
+        "#2c1050", "#5a2c90", "#8c58c8",
+        "#7a3acc", "#b47cf4",
+        "#fff2ff", "#e6b8ff", "#16081c", "#3a2a52", "#0a0410"]

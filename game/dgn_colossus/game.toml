@@ -1,0 +1,9 @@
+# dgn_colossus — SuperForge Dungeons' tile-streamed giant boss (docs/dungeons/21).
+#
+# One scene: the Crownling as a SET OF PICTURES on two page-flipped BG layers (spinning = swapping pictures, so the DMA
+# budget is the limiter), the room's floor on a third BG layer, two OBJ players dodging three slices. Mode 1: no Mode 7.
+globals = ["scene_mgr", "input", "fade", "oam_sprites", "dgnt_rom"]
+
+[[scene]]
+id = "colossus"
+features = ["dgnt_bg", "dgnt_obj"]

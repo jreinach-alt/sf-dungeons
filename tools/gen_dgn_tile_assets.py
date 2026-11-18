@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+"""gen_dgn_tile_assets.py — the tile-streamed giant boss, converted for the ROM (docs/dungeons/21).
+
+    python3 tools/gen_dgn_tile_assets.py OUT_DIR [--preview OUT.gif] [--late-fault-free]
+
+Reads ONLY committed inputs (the build never runs Blender): the 33 pictures of art/dungeons/creatures/out/
+crownling_giant (spin_down.png, ext_down.png), the players (via gen_dgn_fight_assets). The director
+(tools/dgn_tilestream/director.py) builds the sequence and SOLVES the schedule; this script emits (byte-identical):
+
+  dgnt_pool0..6.bin  7 x 28,672 B  every block of boss tile and tilemap data, packed so no DMA run crosses a bank
+  dgnt_hero.bin      9,216 B       the players' 18 frames (4x4-tile slot images), streamed with back buffers
+  dgnt_floor.bin     2,176 B       the room's floor on BG3: 8 tiles of 2bpp + the 32x32 map
+  dgnt_pal.bin       104 B         boss palette (16 words) + floor palette (4) + OBJ palettes P1, P2 (32)
+  dgnt_score.bin     16,384 B      T ticks x 20 B: 4 OAM entries, the hi byte, TM (which boss layer is shown), BG VOFS
+  dgnt_cmds.bin      8,192 B       the DMA commands, 8 B each, grouped by tick; the entry-state commands last
+  dgnt_ptr.bin       2,048 B       T + 2 u16 byte offsets into the command stream
+  dgnt_frames.inc    equates. Never an address.
+  dgnt_report.json   the numbers the doc and the tests quote
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "tools"))
+from dgn_tilestream import director as D  # noqa: E402
+from dgn_tilestream import floor as FL  # noqa: E402
+from dgn_tilestream import model as M  # noqa: E402
+from dgn_fight import director as DF  # noqa: E402
+from dgn_giant import director as GD  # noqa: E402
+import gen_dgn_fight_assets as GF  # noqa: E402
+from gen_dgn_hero_assets import bgr555  # noqa: E402
+import sheets  # noqa: E402
+
+SCORE_CLAIM, CMDS_CLAIM, PTR_CLAIM = 16384, 8192, 2048
+REC = 20
+
+
+def records(scene):
+    """The 20 B of each tick: 4 OAM entries, the hi byte, TM, BG VOFS (little-endian word)."""
+    players, plan = scene["players"], scene["player_plan"]
+    out = []
+    for t in range(scene["T"]):
+        ent = [[0, GD.PARK_Y, 0, 0] for _ in range(4)]
+        for slot0, who in ((0, "p1"), (2, "p2")):
+            s = players[who][t]
+            name = GD.name_of(who, plan["bufsel"][who][t])
+            attr = DF.ATTR[who] | (DF.HFLIP if s.flip else 0)
+            assert s.frame % DF.HERO_FPF < DF.HERO_ATK0, "the players only walk and idle"
+            x = s.x - ((15 - DF.HERO_AX) if s.flip else DF.HERO_AX)
+            y = s.y - (DF.HERO_AY + 1)
+            assert 0 <= x <= 240 and 0 <= y <= 224, (who, t, x, y)
+            ent[slot0] = [x, y, name, attr]
+            ent[slot0 + 1] = [x, y + 16, name + 32, attr]
+        tk = scene["ticks"][t]
+        rec = bytearray()
+        for e in ent:
+            rec += bytes(v & 255 for v in e)
+        rec += bytes((0, D.TM_FIXED | D.TM_BG[tk["layer"]]))
+        rec += (tk["vofs"] & 0x3FF).to_bytes(2, "little")
+        assert len(rec) == REC
+        out.append(bytes(rec))
+    return out
+
+
+def command_bytes(scene):
+    """8 B a command: dst offset u16, src offset u16, blob u8, kind u8, length u16. Ticks first, then the entry state."""
+    def pack(c):
+        kind, dst, blob, src, n = c
+        assert 0 <= dst < 65536 and 0 <= src < 65536 and n < 65536
+        return dst.to_bytes(2, "little") + src.to_bytes(2, "little") + bytes((blob, kind)) + n.to_bytes(2, "little")
+    order = {D.K_CHR_A: 0, D.K_CHR_B: 0, D.K_MAP_A: 1, D.K_MAP_B: 1, D.K_OBJ: 2}
+    stream, ptr = bytearray(), []
+    for t in range(scene["T"]):
+        ptr.append(len(stream))
+        for c in scene["cmds"].get(t, []):
+            stream += pack(c)
+    ptr.append(len(stream))
+    for c in scene["init"]:
+        stream += pack(c)
+    ptr.append(len(stream))
+    return bytes(stream), b"".join(p.to_bytes(2, "little") for p in ptr)
+
+
+def pal_blob() -> bytes:
+    boss = json.loads((M.OUT / "palettes.json").read_text())["base"]
+    sty = json.loads((GF.STY / "palettes.json").read_text())
+    words = [bgr555(FL.FLOOR_RGB[0])] + [bgr555(c) for c in boss[1:]]                  # BG palette 2: CGRAM 32..47
+    words += [bgr555(c) for c in FL.FLOOR_RGB]                                         # BG3 palette 0: CGRAM 0..3
+    for p in (sty["p1"], sty["p2"]):
+        words += [0] + [bgr555(c) for c in p[1:]]
+    assert len(words) == 52
+    return b"".join(w.to_bytes(2, "little") for w in words)
+
+
+def pad(data: bytes, size: int, what: str) -> bytes:
+    if len(data) > size:
+        raise SystemExit(f"gen_dgn_tile_assets: {what} is {len(data)} B, over its {size} B claim")
+    return data + bytes(size - len(data))
+
+
+def inc_text(scene, lib) -> str:
+    chr_tiles = max(v.n for v in lib.values()) + 1
+    return "\n".join([
+        "; GENERATED by tools/gen_dgn_tile_assets.py: do not edit.",
+        "; The score's length and record layout, and the boss's CHR size. No addresses.",
+        f"DGNT_T = {scene['T']}",
+        f"DGNT_REC = {REC}",
+        f"DGNT_REC_END = {scene['T'] * REC}",
+        f"DGNT_CHR_TILES = {chr_tiles}",
+        f"DGNT_FLOOR_TILES = {FL.N_TILES}",
+        f"DGNT_BACKDROP_BGR = {bgr555(FL.FLOOR_RGB[0])}", ""])
+
+
+def depth_equation(cap, reserve):
+    rows = M.depth_table()
+    return [M.equation(r, cap - reserve, rom_budget=D.POOL_CLAIMS * D.POOL_BYTES) for r in rows]
+
+
+def report(scene, lib, pool, ticks):
+    T = scene["T"]
+    evs = sorted(scene["events"], key=lambda p: p.tick)
+    swaps = [p for p in evs if p.ev.kind == "swap"]
+    # rotation speed: degrees between consecutive swaps / ticks between them (spin pictures only)
+    spd = []
+    for a, b in zip(swaps, swaps[1:]):
+        if a.ev.vid[0] in "sm" and b.ev.vid[0] in "sm":
+            dk = (b.ev.pic - a.ev.pic) % 24
+            spd.append((a.tick, dk * M.STEP / max(1, b.tick - a.tick), a.ev.vid[0]))
+    cost = [sum(M.cost_mc(c[4]) for c in scene["cmds"].get(t, [])) for t in range(T)]
+    return {"ticks": T, "events": len(evs), "swaps": len(swaps),
+            "peak_spin_deg_per_tick": max(s[1] for s in spd), "mean_spin_deg_per_tick": sum(s[1] for s in spd) / len(spd),
+            "peak_cost_mc": max(cost), "cap_mc": scene["cap"], "reserve_mc": scene["reserve_mc"],
+            "pool_blobs_used": len(pool.blobs), "pool_bytes": sum(len(b) for b in pool.blobs),
+            "variants": {k: {"slots": v.n, "load_bytes": v.load_bytes()} for k, v in lib.items() if k in ("s12", "m20", "c21", "c0", "c3")},
+            "unique_tiles_max": max(v.n for v in lib.values()) + 1,
+            "equation": depth_equation(scene["cap"], scene["reserve_mc"]),
+            "cut_ticks": {str(k): v for k, v in scene["cuts"].items()}}
+
+
+def render_preview(scene, lib, ticks, step=2, scale=3):
+    pics = M.load_pictures()
+    boss_pal = json.loads((M.OUT / "palettes.json").read_text())["base"]
+    sty = json.loads((GF.STY / "palettes.json").read_text())
+    floor = FL.image()
+    fl_rgb = np.array(FL.FLOOR_RGB, np.uint8)
+    hero = GF.hero_frames()
+    frames = []
+    for t in range(0, scene["T"], step):
+        tk = scene["ticks"][t]
+        c = fl_rgb[floor[:224]].copy()
+        top = tk["vofs"]
+        img = pics[tk["pic"]]
+        for y in range(224):
+            row = y + top
+            if 0 <= row < M.CH:
+                r = img[row]
+                nz = r > 0
+                c[y, nz] = np.array(boss_pal, np.uint8)[r[nz]]
+        for who, pal in (("p1", sty["p1"]), ("p2", sty["p2"])):
+            s = scene["players"][who][t]
+            f = hero[s.frame][:, :16]
+            ax = (15 - DF.HERO_AX) if s.flip else DF.HERO_AX
+            im = f[:, ::-1] if s.flip else f
+            x0, y0 = s.x - ax, s.y - DF.HERO_AY
+            ys, xs = np.nonzero(im)
+            for yy, xx in zip(ys, xs):
+                X, Y = x0 + xx, y0 + yy
+                if 0 <= X < 256 and 0 <= Y < 224:
+                    c[Y, X] = pal[im[yy, xx]]
+        frames.append(Image.fromarray(c).resize((256 * scale, 224 * scale), Image.NEAREST))
+    return frames
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("out", type=Path)
+    ap.add_argument("--preview", type=Path)
+    a = ap.parse_args(argv)
+    a.out.mkdir(parents=True, exist_ok=True)
+    scene = D.compile_scene()
+    lib, pool = scene["lib"], scene["pool"]
+    blobs = pool.finish()
+    for i, b in enumerate(blobs):
+        (a.out / f"dgnt_pool{i}.bin").write_bytes(b)
+    (a.out / "dgnt_hero.bin").write_bytes(b"".join(GF.tiles_rowmajor(f) for f in GF.hero_frames()))
+    (a.out / "dgnt_floor.bin").write_bytes(FL.blob())
+    (a.out / "dgnt_pal.bin").write_bytes(pal_blob())
+    recs = records(scene)
+    (a.out / "dgnt_score.bin").write_bytes(pad(b"".join(recs), SCORE_CLAIM, "the score"))
+    cmds, ptr = command_bytes(scene)
+    (a.out / "dgnt_cmds.bin").write_bytes(pad(cmds, CMDS_CLAIM, "the command stream"))
+    (a.out / "dgnt_ptr.bin").write_bytes(pad(ptr, PTR_CLAIM, "the pointer table"))
+    (a.out / "dgnt_frames.inc").write_text(inc_text(scene, lib))
+    rep = report(scene, lib, pool, scene["ticks"])
+    (a.out / "dgnt_report.json").write_text(json.dumps(rep, indent=1))
+    if a.preview:
+        fr = render_preview(scene, lib, scene["ticks"])
+        fr[0].save(a.preview, save_all=True, append_images=fr[1:], duration=33, loop=0, optimize=False)
+    print(f"gen_dgn_tile_assets: {scene['T']} ticks, {rep['swaps']} picture swaps, spin peak {rep['peak_spin_deg_per_tick']:.1f} "
+          f"deg/tick (mean {rep['mean_spin_deg_per_tick']:.1f}), peak DMA {rep['peak_cost_mc']} of {rep['cap_mc']} mc, "
+          f"pool {rep['pool_blobs_used']} claims")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

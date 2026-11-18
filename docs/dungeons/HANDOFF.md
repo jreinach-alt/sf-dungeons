@@ -80,6 +80,17 @@ scene: scanline 232). `tools/dgn_giant/director.py::render_m7` is a reference re
 arithmetic, pixel-exact against the machine. Not yet tried: a floor or HUD under it (Mode 7 / Mode 1 split).
 Decisions are in 20 §8.
 
+## 2.7 The tile-streamed giant boss (2026-11-18) — supersedes 2.6 as the answer to the brief
+
+`docs/dungeons/21` and `game/dgn_colossus`: the owner rejected Mode 7 (it removes the limiter and the room's BG).
+The Crownling is 30°-step pictures (`art/dungeons/creatures/specs/crownling_giant.toml`) streamed into two
+page-flipped Mode 1 BG layers, the floor on BG3, two OBJ players. `tools/dgn_tilestream/` holds the library, the
+closed-form equation (`model.equation`) and the director, a greedy scheduler that fills every tick's VBlank budget
+(that fill IS the limiter) and emits the score `tools/gen_dgn_tile_assets.py` converts. Spin: 30°/tick at the rim,
+~19° mid-depth, the cut base's load is the pause before each cut. The cost model is FITTED to the console's V
+counter (8.4 mc/B + 1250 mc/command; within a line on 296 frames), worst tick ends on 258 of 261. **`make
+bare-check` has not been run on this work** (the cheap gates have; see 21 §5). Decisions are in 21 §6 (BG vs OBJ reading, is 30° readable).
+
 ## 3. Next, in order
 
 1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,

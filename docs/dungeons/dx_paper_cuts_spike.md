@@ -325,6 +325,22 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
 - **easy / LOW — the safety check refuses `rm` with a shell-variable path, even inside `find -exec sh -c`.**
   Clear stale bytecode with `find <literal absolute dir> -name '*.pyc' -delete`.
 
+## The tile-streamed giant boss (2026-11-18)
+
+* **The allocator has no way to say "this claim is shared by two scenes' commands" or "this region is written by a
+  table of commands".** The score player's destinations are runtime data, so the 10 `ES_V_*` bases are read into a
+  table by hand; a wrong entry is caught only by the picture test, never by the allocator.
+* **A tilemap `words` claim needs a `shape` that agrees with it** (`32x64` for 0x800); the refusal was clear and
+  the fix a one-liner, but the vocabulary is not in the feature-authoring doc.
+* **The cost of a DMA is not a kit constant.** Docs 18–19's 680 mc per transfer was for a different player; there is
+  no published way to ask the allocator what a rail's per-transfer overhead is, so every new score player re-fits
+  it from the V counter (`tests/test_dgn_colossus.py` has the fit's check).
+* **A `.py` test module that imports numpy before `machine` crashes the whole collection** (the core is dlopen'd at
+  import); the pure test needs a "import order only" line, which is easy to forget and fails with a stack of
+  pytest frames and no message about why.
+* **`cleanroom` also reads test function NAMES**: an ordinary English verb that happens to be a retail title tripped
+  it; renamed, and a doc line that quoted the word tripped it again.
+
 ## The giant Mode 7 boss (2026-11-18)
 
 - **surprise / HIGH — a green test can be checking the wrong thing, and only the picture says so.** The Mode 7

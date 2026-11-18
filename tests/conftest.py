@@ -1240,6 +1240,9 @@ MAPS = {
     "build/dgng/symbol_map.json": (
         "dgn_giant",
         ["--game", "game/dgn_giant", "--features-dir", "engine/features"]),
+    "build/dgnc/symbol_map.json": (
+        "dgn_colossus",
+        ["--game", "game/dgn_colossus", "--features-dir", "engine/features"]),
     "build/st/symbol_map.json": (
         "stomper",
         ["--game", "game/stomper", "--features-dir", "engine/features"]),
@@ -1340,6 +1343,7 @@ _SUBDIR_MAP = {"aur": "build/aur/symbol_map.json",
                "dgnb": "build/dgnb/symbol_map.json",
                "dgnf": "build/dgnf/symbol_map.json",
                "dgng": "build/dgng/symbol_map.json",
+               "dgnc": "build/dgnc/symbol_map.json",
                "st": "build/st/symbol_map.json",
                "sr": "build/sr/symbol_map.json",
                "br": "build/br/symbol_map.json",
