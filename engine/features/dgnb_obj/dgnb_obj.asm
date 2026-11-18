@@ -21,6 +21,8 @@ OBJ0 = ES_OAM_SHADOW + ES_O_ACTORS * 4
 OBJ_HI = ES_OAM_SHADOW + ES_OAM_SHADOW_SIZE - 32 + (ES_O_ACTORS / 4)
 OBJ_PARK_Y = 240
 VRAM_ROW = 16 * 16                ; words in one 16-tile row of the OBJ name table
+BOSS_FRAME_BYTES = 8 * 8 * 32     ; a boss frame: 8x8 tiles of 32 B. Named, never an immediate: the no-literals lint reads
+                                  ; EVERY feature file against EVERY rail's map, and 2048 is an allocated address in microzero's
 VRAM_T1 = 256 * 16                ; words from the claim base to name table 1 (OBSEL gap 0: contiguous)
 VRAM_P1 = ES_V_OBJ_CHR + DGNB_NAME_P1 * 16
 VRAM_P2 = ES_V_OBJ_CHR + DGNB_NAME_P2 * 16
@@ -448,7 +450,7 @@ dgnb_nmi_stream:
     ; Never assembled into the real ROM; it exists so the tear and overrun detectors are known to fire.
     lda z:US_Y_S
     sec
-    sbc #2048
+    sbc #BOSS_FRAME_BYTES
     sta z:US_Y_S
     lda #ES_V_OBJ_CHR
     sta z:US_X_S
