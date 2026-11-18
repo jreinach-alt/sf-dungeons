@@ -62,6 +62,15 @@ frames (streamed) and two small enemies (resident) on the console, with the V co
 every frame. The first obj_stream-shaped code in the tree, hand-rolled; **no scheduler and no deadline guard
 yet (18 §3.2)**. Decisions are in 18 §6.
 
+## 2.5 The choreographed boss fight (2026-11-18)
+
+`docs/dungeons/19` and `game/dgn_fight`: the boss moves about the arena through a slam, a slam and a whirl; player 1
+chases and attacks from three sides, backing away from each; player 2 duels two small enemies. The scene is a
+**score** compiled by `tools/dgn_fight/director.py`, which prefetches every streamed frame into a back buffer
+and proves the per-tick DMA load; the ROM only plays it back. Worst VBlank ends on 235 (hybrid 241) against 260
+unchoreographed. **Read 19 §4.1: the commit before this one broke `make microzero` (a cross-rail lint hazard);
+fixed in `4abbecd`. `make bare-check` has NOT been run on the tip.** Decisions are in 19 §7.
+
 ## 3. Next, in order
 
 1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,

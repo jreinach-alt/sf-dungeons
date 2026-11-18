@@ -1234,6 +1234,9 @@ MAPS = {
     "build/dgnb/symbol_map.json": (
         "dgn_boss",
         ["--game", "game/dgn_boss", "--features-dir", "engine/features"]),
+    "build/dgnf/symbol_map.json": (
+        "dgn_fight",
+        ["--game", "game/dgn_fight", "--features-dir", "engine/features"]),
     "build/st/symbol_map.json": (
         "stomper",
         ["--game", "game/stomper", "--features-dir", "engine/features"]),
@@ -1332,6 +1335,7 @@ _SUBDIR_MAP = {"aur": "build/aur/symbol_map.json",
                "sprg": "build/sprg/symbol_map.json",
                "dgnh": "build/dgnh/symbol_map.json",
                "dgnb": "build/dgnb/symbol_map.json",
+               "dgnf": "build/dgnf/symbol_map.json",
                "st": "build/st/symbol_map.json",
                "sr": "build/sr/symbol_map.json",
                "br": "build/br/symbol_map.json",

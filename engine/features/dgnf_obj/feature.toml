@@ -1,0 +1,58 @@
+# dgnf_obj — the choreographed boss fight's OBJ layer (docs/dungeons/19): a SCORE PLAYER.
+#
+# Each tick the main thread copies one 51 B record from the score into the OAM shadow; the NMI hook plays that
+# tick's DMA rows. The 64x64 boss and both players each own TWO VRAM buffers: the director prefetches the next
+# frame into the buffer that is off screen, spread over the ticks the current frame is held, and OAM names swap
+# to it for free. Movement is OAM x/y only. The worst tick is declared below; the director proves it.
+#
+# SIZE MODE 3 (OBSEL: small 16x16 / large 32x32). OBJ CHR is both name tables, 512 tiles contiguous:
+#   table 0, STREAMED: boss buffers A/B (cols 0-7 / 8-15, rows 0-7), P1 A/B and P2 A/B (rows 8-11)
+#   table 1, RESIDENT: Thornhopper (10 frames, rows 0-11) and Thornling (10 frames, rows 12-15), full
+name = "dgnf_obj"
+role = "consumer"
+depends = ["oam_sprites", "dgnf_rom"]
+
+[[claims.dma_init]]
+name = "obj_up"
+channel = 0
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+
+[[claims.hdma]]
+name = "dgnfs"
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+band = "scene"
+phase = "vblank"
+channels = 1
+
+# THE WORST TICK OF THE CHOREOGRAPHED SCORE: 512 B in 3 transfers (the director's peak). The unchoreographed
+# control (`make dgn_fight_naive`) plays the SAME ROM against a score whose worst tick is 3,072 B in 16
+# transfers, which this declaration deliberately does not cover.
+[claims.dma]
+vblank_bytes_per_frame = 512
+vblank_transfers_per_frame = 3
+
+[[claims.vram]]
+name = "obj_chr"
+kind = "chr"
+obj = true
+words = 8192
+
+[[claims.cgram]]
+name = "obj_pal"
+words = 64
+at = 128
+
+# 0-1 P1 (top, bottom), 2-3 P2, 4 enemy A, 5 enemy B, 6-9 the boss (TL, TR, BL, BR); 10-11 parked pads
+[[claims.oam]]
+name = "actors"
+sprites = 12
+at = 0
+
+[[claims.reg]]
+name = "obj_obsel"
+registers = ["OBSEL"]
+
+[init]
+zero = []

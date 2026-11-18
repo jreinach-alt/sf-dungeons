@@ -304,3 +304,23 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
 - **easy / LOW — the V-counter latch is a 4-instruction measurement tool** (`$213F`, `$2137`, `$213D` ×2)
   and turned "does it fit in VBlank?" from arithmetic into a number read per frame. Worth a shared
   `vblank_probe` feature.
+
+## The choreographed boss fight (2026-11-18)
+
+- **surprise / HIGH — a new feature file's immediates are a cross-rail hazard, and no fast gate sees it.** The
+  no-literals lint scans every `engine/features/*/*.asm` against EVERY rail's symbol map, so a literal in my
+  never-assembled `.ifdef` block (`sbc #2048`) broke `make microzero`, a rail I never touched. `make bare-check`
+  found it at its sanity tests; my rail's tests, `make register`, `width-check` and the rest were green.
+  *Fix:* a `make lint-all-rails FILES=...` that allocates every rail (a few seconds) and runs only the
+  immediate/channel classes over the named files, wired into the pre-commit hook.
+- **surprise / MEDIUM — an independent interpreter is worth more than any number of tests of the planner.** The
+  loop-entry-state bug (a prefetch window straddling the wrap) was invisible to every assertion about the
+  planner and obvious to a 40-line interpreter that plays the emitted binaries against an abstract VRAM. Keep
+  the checker free of the planner's code.
+- **clunky / MEDIUM — three ROM variants, three hand-copied recipes.** `dgn_fight_naive`, `_hybrid` and `_late`
+  (and 18's `_overload`) each repeat the assemble/link/checksum lines. A `ROM_VARIANT` Make macro would take them
+  to one line each.
+- **easy / LOW — `lda f:label,y` does not exist.** Long-indexed addressing is `,x` only; index with X (or use
+  an absolute indexed load in the same bank).
+- **easy / LOW — the safety check refuses `rm` with a shell-variable path, even inside `find -exec sh -c`.**
+  Clear stale bytecode with `find <literal absolute dir> -name '*.pyc' -delete`.

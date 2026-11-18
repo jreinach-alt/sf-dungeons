@@ -1,0 +1,47 @@
+# dgnf_rom — the choreographed boss fight's art and SCORE, as ROM data (docs/dungeons/19).
+#
+# Converted by tools/gen_dgn_fight_assets.py from COMMITTED strips; the build never runs Blender. A GLOBAL blob
+# feature for the reason sprg_rom states. Every claim site in game/dgn_fight/main.asm .asserts its blob's
+# bank/addr against the allocator's emitted symbols.
+#
+# THE SCORE IS DATA: the OAM shadow for every tick of a 580-tick loop (51 B a tick), the DMA rows to play on
+# each tick, and a pointer table into them. All three are produced by the director, which has already proven
+# the per-tick DMA load; the ROM only plays them back.
+name = "dgnf_rom"
+role = "blob"
+
+[[claims.rom]]
+name = "dgnf_boss0_rom"
+bytes = 28672            # boss frames 0-13 (2,048 B each: an 8x8-tile image; a DMA cannot cross a bank)
+
+[[claims.rom]]
+name = "dgnf_boss1_rom"
+bytes = 28672            # frames 14-27
+
+[[claims.rom]]
+name = "dgnf_boss2_rom"
+bytes = 28672            # frames 28-37 (+ 4 empty): 19 frames a facing, down then right
+
+[[claims.rom]]
+name = "dgnf_hero_rom"
+bytes = 9216             # 18 frames x 512 B: a player's 4x4-tile slot image, 9 a facing
+
+[[claims.rom]]
+name = "dgnf_res_rom"
+bytes = 8192             # both enemies' 10 frames each, RESIDENT in OBJ name table 1 (256 tiles)
+
+[[claims.rom]]
+name = "dgnf_pal_rom"
+bytes = 128              # OBJ palettes 0 P1, 1 P2, 2 boss, 3 enemies
+
+[[claims.rom]]
+name = "dgnf_score_rom"
+bytes = 32768            # 580 ticks x 51 B (12 OAM entries + 3 hi bytes), padded to one whole bank
+
+[[claims.rom]]
+name = "dgnf_cmds_rom"
+bytes = 16384            # the DMA rows, 6 B each, grouped by tick; the entry-state rows are last
+
+[[claims.rom]]
+name = "dgnf_ptr_rom"
+bytes = 2048             # T + 2 u16 byte offsets into the command stream

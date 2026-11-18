@@ -99,7 +99,8 @@ is the Mesen2 core's cycle accuracy, not a console's.
    guard of §3.2 and the OAM built from `HAVE`, not `WANT`.
 3. **Build `obj_stream` properly** (02 §1.2) from this: a per-slot request queue, a VBlank scheduler with a
    byte budget and priorities (players first, boss next), and the deadline guard. This spike is the
-   hand-rolled first slice.
+   hand-rolled first slice. **Doc 19 measured the better shape: a scripted boss as a pre-compiled score with
+   back-buffer prefetch (worst VBlank line 235 against 260).**
 4. Re-do the **sliver ledger** for size mode 3 (§3.5) before M5.
 5. Decide whether the **boss frame format** drops blank tile rows (≈ a third off 57 KB).
 

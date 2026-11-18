@@ -213,6 +213,26 @@ hold = [4, 3, 10]
 "leg.L3" = ["home", "plant", "plant"]
 "leg.R3" = ["home", "plant", "plant"]
 
+# WHIRL: a second attack, readable from the silhouette: the whole bell SPINS on planted feet (body yaw), tilting as it
+# goes, with the ring of sound kept out around it. Five frames of 72 degrees: a loop with no seam.
+[action.whirl]
+type = "poses"
+frames = 5
+hold = [7, 7, 7, 7, 7]
+[action.whirl.keys]
+"body.yaw" = [0.0, 72.0, 144.0, 216.0, 288.0]
+"bell.roll" = [10.0, -10.0, 10.0, -10.0, 10.0]
+"bell.pitch" = [-8.0, -4.0, -8.0, -4.0, -8.0]
+"body.z" = [-0.012, -0.02, -0.012, -0.02, -0.012]
+"shock.scale" = [0.75, 0.9, 1.0, 0.9, 0.75]
+[action.whirl.feet]
+"leg.L1" = ["plant", "plant", "plant", "plant", "plant"]
+"leg.R1" = ["plant", "plant", "plant", "plant", "plant"]
+"leg.L2" = ["plant", "plant", "plant", "plant", "plant"]
+"leg.R2" = ["plant", "plant", "plant", "plant", "plant"]
+"leg.L3" = ["plant", "plant", "plant", "plant", "plant"]
+"leg.R3" = ["plant", "plant", "plant", "plant", "plant"]
+
 # ---- the painter ------------------------------------------------------------------------------------------------------
 [paint]
 cover = 0.42

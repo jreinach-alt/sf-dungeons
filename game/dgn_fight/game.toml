@@ -1,0 +1,10 @@
+# dgn_fight — SuperForge Dungeons' choreographed boss fight (docs/dungeons/19).
+#
+# One scene: a 64x64 boss moving about the arena through a pre-programmed series of attacks, player 1 chasing
+# it and attacking from three angles while backing away from each attack, player 2 fighting two small enemies.
+# The whole thing is a SCORE compiled offline; the ROM plays it back. OBJ only, over the floor backdrop.
+globals = ["scene_mgr", "input", "fade", "oam_sprites", "dgnf_rom"]
+
+[[scene]]
+id = "fight"
+features = ["backdrop", "dgnf_obj"]

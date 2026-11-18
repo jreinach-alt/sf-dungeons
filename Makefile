@@ -27,7 +27,7 @@ LD65    := ld65
 	m7x-assets mode7_explore pfs-assets platformer_stream scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
 	scroller-tb tb-measure tb-picture rate-oracle \
-	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss stomper scroll_run brawler \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight stomper scroll_run brawler \
 	split_h_matrix_demo split_h_persp3_demo \
 	svd-assets split_v_demo svd-nowin split_v_seamtrial \
 	split_h_demo shd-autodemo shp-assets split_h_persp_demo shp-autodemo \
@@ -509,6 +509,78 @@ $(BUILD)/dgn_boss_overload.sfc: $(BUILD)/dgn_boss.sfc $(DGNB_ASM) $(DGNB)/dgnb.i
 	$(PY) tools/fix_checksum.py $@
 
 dgn_boss_overload: $(BUILD)/dgn_boss_overload.sfc
+
+# ---- dgn_fight: the CHOREOGRAPHED boss fight (docs/dungeons/19) -
+# The scene is a SCORE compiled offline by tools/dgn_fight/director.py: every position, facing and frame of
+# every actor on every tick, and the DMA rows that prefetch each streamed frame into a back buffer. The ROM
+# plays it back. `dgn_fight_naive` is the SAME ROM and score against the unchoreographed stream (the control);
+# `dgn_fight_late` plays every tick's rows one tick late (the planted fault the tests must catch).
+DGNF      := game/dgn_fight
+DGNF_MAP  := $(BUILD)/dgnf
+DGNF_ASM  := $(DGNF)/main.asm $(wildcard $(DGNF)/scenes/*.asm) \
+             $(wildcard engine/features/*/*.asm)
+DGNF_ART  := $(wildcard art/dungeons/creatures/out/bellwretch64/*.png) \
+             $(wildcard art/dungeons/creatures/out/thornhopper/*.png) \
+             $(wildcard art/dungeons/creatures/out/thornling/*.png) \
+             $(wildcard art/dungeons/creatures/out/*/palettes.json) \
+             $(wildcard art/dungeons/creatures/specs/*.toml) \
+             $(wildcard art/dungeons/style/out/a_storybook/*.png) \
+             art/dungeons/style/out/a_storybook/palettes.json \
+             tools/gen_dgn_fight_assets.py tools/gen_dgn_hero_assets.py $(wildcard tools/dgn_fight/*.py)
+DGNF_BINS := dgnf_boss0.bin dgnf_boss1.bin dgnf_boss2.bin dgnf_hero.bin dgnf_res.bin dgnf_pal.bin \
+             dgnf_score.bin dgnf_cmds.bin dgnf_ptr.bin dgnf_frames.inc
+
+$(DGNF_MAP)/engine_state_globals.inc $(DGNF_MAP)/symbol_map.json: \
+		allocator/substrate.toml allocator/allocate.py allocator/schemas.py \
+		$(wildcard engine/features/*/feature.toml) $(DGNF)/game.toml \
+		$(DGNF)/state.toml | $(BUILD)
+	$(PY) allocator/allocate.py --game $(DGNF) --features-dir engine/features \
+		--out $(DGNF_MAP)
+
+$(addprefix $(BUILD)/assets_fight/,$(DGNF_BINS)): $(DGNF_ART) | $(BUILD)
+	$(PY) tools/gen_dgn_fight_assets.py $(BUILD)/assets_fight --mode choreo
+
+$(addprefix $(BUILD)/assets_fight_naive/,$(DGNF_BINS)): $(DGNF_ART) | $(BUILD)
+	$(PY) tools/gen_dgn_fight_assets.py $(BUILD)/assets_fight_naive --mode naive
+
+$(addprefix $(BUILD)/assets_fight_hybrid/,$(DGNF_BINS)): $(DGNF_ART) | $(BUILD)
+	$(PY) tools/gen_dgn_fight_assets.py $(BUILD)/assets_fight_hybrid --mode hybrid
+
+DGNF_CA65 = $(CA65) -I $(DGNF_MAP) -I $(VROM) -I $(DGNF) \
+	-I engine/features/scene_mgr -I engine/features/input -I engine/features/fade \
+	-I engine/features/oam_sprites -I engine/features/dgnf_obj
+
+$(BUILD)/dgn_fight.sfc: $(DGNF_ASM) $(DGNF_MAP)/engine_state_globals.inc \
+		$(addprefix $(BUILD)/assets_fight/,$(DGNF_BINS)) \
+		$(VROM)/header.inc $(VROM)/init.inc $(VROM)/ppu_reset.inc $(VROM)/lorom_512k.cfg | $(BUILD)
+	$(PY) allocator/no_literals.py --map $(DGNF_MAP)/symbol_map.json $(DGNF_ASM)
+	$(DGNF_CA65) -I $(BUILD)/assets_fight --bin-include-dir $(BUILD)/assets_fight \
+		-o $(BUILD)/dgn_fight.o $(DGNF)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_fight.o
+	$(PY) tools/fix_checksum.py $@
+
+$(BUILD)/dgn_fight_naive.sfc: $(BUILD)/dgn_fight.sfc $(addprefix $(BUILD)/assets_fight_naive/,$(DGNF_BINS))
+	$(DGNF_CA65) -I $(BUILD)/assets_fight_naive --bin-include-dir $(BUILD)/assets_fight_naive \
+		-o $(BUILD)/dgn_fight_naive.o $(DGNF)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_fight_naive.o
+	$(PY) tools/fix_checksum.py $@
+
+$(BUILD)/dgn_fight_hybrid.sfc: $(BUILD)/dgn_fight.sfc $(addprefix $(BUILD)/assets_fight_hybrid/,$(DGNF_BINS))
+	$(DGNF_CA65) -I $(BUILD)/assets_fight_hybrid --bin-include-dir $(BUILD)/assets_fight_hybrid \
+		-o $(BUILD)/dgn_fight_hybrid.o $(DGNF)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_fight_hybrid.o
+	$(PY) tools/fix_checksum.py $@
+
+$(BUILD)/dgn_fight_late.sfc: $(BUILD)/dgn_fight.sfc $(DGNF_ASM)
+	$(DGNF_CA65) -D DGNF_LATE=1 -I $(BUILD)/assets_fight --bin-include-dir $(BUILD)/assets_fight \
+		-o $(BUILD)/dgn_fight_late.o $(DGNF)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_fight_late.o
+	$(PY) tools/fix_checksum.py $@
+
+dgn_fight: $(BUILD)/dgn_fight.sfc
+dgn_fight_naive: $(BUILD)/dgn_fight_naive.sfc
+dgn_fight_hybrid: $(BUILD)/dgn_fight_hybrid.sfc
+dgn_fight_late: $(BUILD)/dgn_fight_late.sfc
 
 # ---- shmup: the vertical shooter ----------------
 # The rail that debuts POOL. Its BG feature (shmup_bg) owns both co-resident
@@ -3474,7 +3546,7 @@ gates: | $(BUILD)
 	run aurora; \
 	run camera_follow; run maze; run jumper; run patrol; \
 	run sprite_game; \
-	run dgn_hero; run dgn_boss; \
+	run dgn_hero; run dgn_boss; run dgn_fight; \
 	run stomper; \
 	run scroll_run; run split_h_demo; run shd-autodemo; \
 	run brawler; \
@@ -3495,7 +3567,7 @@ gates: | $(BUILD)
 	cat $(BUILD)/gates_summary.txt; \
 	for rom in microzero room breaker shmup platformer split_v_fight m7_dungeon \
 	           split_h_2p_demo mode7_explore platformer_stream hud_game \
-	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss \
+	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight \
 	           stomper scroll_run brawler \
 	           split_h_matrix_demo split_h_persp3_demo split_v_demo \
 	           split_v_seamtrial split_h_demo split_h_persp_demo \
@@ -3670,7 +3742,7 @@ PYTEST_DIST := $(if $(strip $(XDIST)),-n $(strip $(XDIST)) --dist loadfile,)
 # tools/harness_faults.py then says which KIND of red it is (docs/44 section 8).
 test: toy microzero room probes breaker shmup platformer split_v_fight \
 	m7_dungeon split_h_2p_demo sh2-variants mode7_explore platformer_stream \
-	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss \
+	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight \
 	stomper \
 	scroll_run brawler split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
@@ -3916,7 +3988,7 @@ MODULE  ?= tests/test_split_h_2p_sprites.py
 FALSIFY ?=
 determinism: split_h_2p_demo sh2-variants microzero hud_game scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
-	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss stomper scroll_run \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight stomper scroll_run \
 	brawler split_v_fight split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
 	split_h_persp_demo shp-autodemo racer mode7_chamber railshooter rs-probe \
