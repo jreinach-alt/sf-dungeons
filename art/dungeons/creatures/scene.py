@@ -34,6 +34,29 @@ def compose():
     return rgb
 
 
+def compose_bestiary():
+    """The hero and the four briefed enemies on the Hollow Wood floor: scale and distinctness in context."""
+    rgb = R.to_rgb(R.build()).copy()
+    f, pal = S.hero_frame("a_storybook", "idle", "down", 0)[0], S.hero_frame("a_storybook", "idle", "down", 0)[1]["p1"]
+    items = [(f, pal, (128, 188), S.anchor("a_storybook", "idle"))]
+    spots = {"bellwretch": ("idle", 0, (60, 142)), "thornhopper": ("idle", 0, (104, 160)),
+             "candlemaw": ("idle", 0, (152, 150)), "crownling": ("idle", 1, (200, 168))}
+    for name, (an, i, root) in spots.items():
+        fr, p, anc = creature_frame(name, an, i)
+        items.append((fr, p, root, anc))
+    for fr, p, root, anc in sorted(items, key=lambda t: t[2][1]):
+        S.place(rgb, fr, p, root, anc)
+    return rgb
+
+
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "bestiary":
+    rgb = compose_bestiary()
+    out = HERE / "out"
+    Image.fromarray(rgb).resize((rgb.shape[1] * 3, rgb.shape[0] * 3), Image.NEAREST).save(out / "bestiary_room_x3.png")
+    S.crt(rgb).save(out / "bestiary_room_crt.png")
+    print("bestiary room ->", out / "bestiary_room_x3.png")
+    sys.exit(0)
+
 if __name__ == "__main__":
     rgb = compose()
     out = HERE / "out"

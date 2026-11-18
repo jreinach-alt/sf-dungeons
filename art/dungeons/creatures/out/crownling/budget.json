@@ -1,0 +1,26 @@
+{
+ "class": "obj32",
+ "frames": 14,
+ "per_frame": {
+  "idle_0": 9,
+  "idle_1": 9,
+  "idle_2": 9,
+  "idle_3": 9,
+  "drift_0": 9,
+  "drift_1": 9,
+  "drift_2": 9,
+  "drift_3": 9,
+  "prepare_0": 9,
+  "prepare_1": 9,
+  "prepare_2": 9,
+  "attack_0": 12,
+  "attack_1": 12,
+  "attack_2": 12
+ },
+ "unique_tiles_all": 113,
+ "rom_bytes_all": 3616,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 4,
+ "max_tiles_one_frame": 12,
+ "name": "crownling"
+}

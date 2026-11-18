@@ -16,6 +16,7 @@ limb set, gait / pose actions, a palette. The Blender builder is exercised by
   * the painter is family-agnostic: a non-hero ramp is outlined by its own darkest step.
 """
 import json
+import math
 import os
 import sys
 import tomllib
@@ -34,10 +35,12 @@ sys.path.insert(0, os.path.join(CRE, "..", "style"))
 sys.path.insert(0, os.path.join(CRE, "..", "actors"))
 import budget as B  # noqa: E402
 import gaits as G  # noqa: E402
+import sugar as SU  # noqa: E402
 import paint as PT  # noqa: E402
 import spec as SP  # noqa: E402
 
-CREATURES = ["spider", "tortoise"]
+CREATURES = ["spider", "tortoise", "bellwretch", "thornhopper", "candlemaw", "crownling"]
+OBJ_CREATURES = ["spider", "bellwretch", "thornhopper", "candlemaw", "crownling"]   # the 32x32 sprites
 
 
 def spec(name):
@@ -200,9 +203,16 @@ def test_the_palette_is_console_exact(name):
                 assert c == ((c >> 3) << 3 | (c >> 3) >> 2), f"{name} {k}: {c} is not BGR555"
 
 
-def test_the_committed_budgets_say_the_creatures_fit():
-    sp = json.load(open(os.path.join(CRE, "out", "spider", "budget.json")))
-    assert sp["class"] == "obj32" and sp["oam_entries_per_actor"] == 1 and sp["max_tiles_one_frame"] <= 16
+@pytest.mark.parametrize("name", OBJ_CREATURES)
+def test_every_32x32_creature_is_one_obj_and_within_the_sliver_budget(name):
+    r = json.load(open(os.path.join(CRE, "out", name, "budget.json")))
+    assert r["class"] == "obj32" and r["oam_entries_per_actor"] == 1 and r["slivers_per_line"] == 4
+    assert r["max_tiles_one_frame"] <= 16, "a 32x32 OBJ is at most 16 tiles"
+    # a bestiary of these must fit the CHR it streams: well under one 16 KB OBJ page each
+    assert r["rom_bytes_all"] <= 16 * 1024
+
+
+def test_the_committed_budgets_say_the_tortoise_fits():
     to = json.load(open(os.path.join(CRE, "out", "tortoise", "budget.json")))
     assert to["pose_fits_buffer"] and to["max_unique_tiles_one_pose"] <= B.BG_CHR_TILES
     assert to["vblank_frames_for_worst"] == 1, "a pose change should stream inside ONE VBlank (5,952 B)"
@@ -215,6 +225,50 @@ def test_the_budget_report_matches_the_strips_it_describes():
         _, r = report.run(n)
         old = json.load(open(os.path.join(CRE, "out", n, "budget.json")))
         assert old["unique_tiles_all"] == r["unique_tiles_all"] and old["per_frame"] == r["per_frame"]
+
+
+# --- the generic generators (sugar.py) ---------------------------------------------------------------
+def test_spikes_are_a_deterministic_irregular_ring():
+    p = dict(kind="spikes", name="pt", c=[0, 0, 1], n=5, R=0.2, len=[0.1, 0.3], radius=0.05, role="crown", bone="b", seed=4)
+    a, b = SU.expand_sugar(dict(p)), SU.expand_sugar(dict(p))
+    assert a == b and len(a) == 5
+    heights = [round(c["b"][2] - c["a"][2], 4) for c in a]
+    assert all(0.1 - 1e-9 <= h <= 0.3 + 1e-9 for h in heights) and len(set(heights)) == 5, "five UNEVEN points"
+    for c in a:
+        assert math.hypot(*c["a"][:2]) == pytest.approx(0.2)                     # on the ring
+    down = SU.expand_sugar({**p, "dir": "down"})
+    assert all(c["b"][2] < c["a"][2] for c in down), "drips hang"
+
+
+def test_petals_surround_the_centre_evenly_and_tilt_up():
+    p = dict(kind="petals", name="pe", c=[0, 0, 0], n=6, r=[0.07, 0.03, 0.01], radius=0.05, tilt=30, role="petal", bone="b")
+    out = SU.expand_sugar(p)
+    assert len(out) == 6
+    angles = sorted(round(math.degrees(math.atan2(c["c"][1], c["c"][0])) % 360) for c in out)
+    assert angles == [0, 60, 120, 180, 240, 300]
+    assert all(c["c"][2] > 0 and c["rot"][1] == -30 for c in out)
+
+
+def test_a_wave_loops_exactly_and_lags_down_the_chain():
+    w = dict(bones=["a.1", "a.2", "a.3"], kind="pitch", amp=10.0, phase=0.3, lag=0.9, cycles=1, bias=2.0)
+    k = SU.wave_keys(w, 8)
+    assert sorted(k) == ["a.1.pitch", "a.2.pitch", "a.3.pitch"] and all(len(v) == 8 for v in k.values())
+    # one full cycle: the sample after the last frame IS the first
+    assert 10.0 * math.sin(2 * math.pi * 8 / 8 + 0.3) + 2.0 == pytest.approx(k["a.1.pitch"][0])
+    assert k["a.1.pitch"] != k["a.2.pitch"], "each bone lags the one before it"
+    assert max(abs(v - 2.0) for v in k["a.2.pitch"]) <= 10.0 + 1e-9
+
+
+def test_a_wave_or_a_new_part_kind_is_validated():
+    s = spec("crownling")
+    s["action"]["idle"]["wave"][0]["bones"] = ["t1.1", "ghost.1"]
+    assert any("wave bone 'ghost.1' does not exist" in e for e in SP.validate(s))
+    s = spec("bellwretch")
+    s["part"][0].pop("pts")
+    assert any("missing" in e and "pts" in e for e in SP.validate(s))
+    s = spec("candlemaw")
+    s["action"]["prepare"]["keys"]["flame.wobble"] = [0, 0, 0]
+    assert any("kind 'wobble'" in e for e in SP.validate(s))
 
 
 # --- the painter is family-agnostic ----------------------------------------------------------------

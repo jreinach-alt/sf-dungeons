@@ -1,0 +1,235 @@
+# bellwretch — snail + hermit crab + haunted cathedral bell (owner brief: docs/dungeons/refs/).
+# A squat dark creature under an oversized tarnished bronze bell, pale crab legs and pincers, one
+# amber eye. Heavy, deliberate six-legged scuttle (a TRIPOD gait); the bell rocks with every step.
+# Attack: plant, rock the bell violently, slam, release an expanding ring of sound.
+name = "bellwretch"
+family = "bellwretch"
+size_class = "obj32"
+shadow = [0.27, 0.2]
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 43
+supersample = 8
+margin_px = 4
+box = [32, 32]
+anchor = [16, 23.0]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.50, 0.50, -0.60]
+
+[default.keys]
+"shock.scale" = 0.01
+
+[[bone]]
+name = "root"
+parent = ""
+head = [0, 0, 0]
+tail = [0, 0, 0.1]
+[[bone]]
+name = "body"
+parent = "root"
+head = [0, 0, 0.12]
+tail = [0, -0.1, 0.12]
+[[bone]]
+name = "bell"                     # pivots at the base of the bell: it rocks and tilts about this point
+parent = "body"
+head = [0, 0, 0.21]
+tail = [0, 0, 0.34]
+[[bone]]
+name = "shock"                    # a tiny bone at the ground: its SCALE expands the ring about its centre
+parent = "root"
+head = [0, 0, 0.02]
+tail = [0, 0, 0.03]
+
+# ---- the bell: a lathe, banded bronze and tarnish ---------------------------------------------------
+[[part]]
+kind = "lathe"
+name = "bell"
+c = [0, 0, 0.04]
+pts = [[0.235, 0.17], [0.258, 0.20], [0.222, 0.245], [0.192, 0.295], [0.178, 0.35], [0.165, 0.405], [0.135, 0.455], [0.085, 0.49], [0.0, 0.505]]
+roles = ["tarnish", "bronze", "bronze", "tarnish", "bronze", "bronze", "bronze", "bronze"]
+role = "bronze"
+bone = "bell"
+nu = 32
+[[part]]
+kind = "tube"
+name = "loop"
+pts = [[-0.03, 0, 0.525, 0.012], [-0.03, 0, 0.575, 0.012], [0, 0, 0.6, 0.012], [0.03, 0, 0.575, 0.012], [0.03, 0, 0.525, 0.012]]
+role = "bronze"
+bone = "bell"
+seg = 6
+
+# ---- the creature under the bell ---------------------------------------------------------------------
+[[part]]
+kind = "ellipsoid"
+name = "body"
+c = [0, -0.02, 0.115]
+r = [0.15, 0.17, 0.075]
+role = "body"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "socket"
+c = [0, -0.14, 0.13]
+r = [0.085, 0.05, 0.07]
+role = "detail"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "eye"
+c = [0, -0.172, 0.13]
+r = [0.052, 0.04, 0.052]
+role = "eye"
+bone = "body"
+[[part]]
+kind = "ellipsoid"
+name = "pincer"
+c = [0.165, -0.20, 0.085]
+r = [0.055, 0.075, 0.04]
+role = "bone"
+bone = "body"
+mirror = true
+[[part]]
+kind = "cone"
+name = "pincer_tip"
+a = [0.15, -0.255, 0.085]
+b = [0.12, -0.32, 0.075]
+radius = 0.026
+role = "bone"
+bone = "body"
+mirror = true
+[[part]]
+kind = "cone"
+name = "pincer_tip2"
+a = [0.19, -0.25, 0.085]
+b = [0.22, -0.315, 0.075]
+radius = 0.024
+role = "bone"
+bone = "body"
+mirror = true
+
+# ---- the shockwave ring: collapsed until the attack ----------------------------------------------------
+[[part]]
+kind = "ring"
+name = "wave"
+c = [0, 0, 0.03]
+radius = 0.21
+thick = 0.03
+flat = 0.7
+role = "glow"
+bone = "shock"
+
+# ---- six IK legs: a tripod gait (L1 R2 L3 | R1 L2 R3) -----------------------------------------------------------
+[[legset]]
+name = "leg"
+parent = "body"
+tags = ["L1", "R1", "L2", "R2", "L3", "R3"]
+radius = [0.026, 0.02]
+role = "bone"
+knee_lift = 0.09
+knee_out = 0.05
+pole_up = 0.3
+pole_out = 0.1
+[legset.claws]
+n = 2
+spread = 0.03
+len = 0.05
+radius = 0.014
+role = "bone"
+[legset.hip]
+L1 = [0.085, -0.09, 0.115]
+R1 = [-0.085, -0.09, 0.115]
+L2 = [0.115, -0.01, 0.115]
+R2 = [-0.115, -0.01, 0.115]
+L3 = [0.095, 0.085, 0.115]
+R3 = [-0.095, 0.085, 0.115]
+[legset.foot]
+L1 = [0.20, -0.20, 0.0]
+R1 = [-0.20, -0.20, 0.0]
+L2 = [0.255, -0.02, 0.0]
+R2 = [-0.255, -0.02, 0.0]
+L3 = [0.20, 0.19, 0.0]
+R3 = [-0.20, 0.19, 0.0]
+
+# ---- actions -----------------------------------------------------------------------------------------------------
+[action.idle]
+type = "keys"
+frames = 4
+hold = [14, 14, 14, 14]
+[action.idle.keys]
+"bell.roll" = [-3.0, 0.0, 3.0, 0.0]
+"bell.pitch" = [-9.0, -7.5, -9.0, -7.5]
+"body.z" = [0.0, 0.004, 0.0, 0.004]
+
+[action.scuttle]
+type = "gait"
+frames = 4
+hold = [8, 8, 8, 8]
+legset = "leg"
+gait = "tetrapod"
+stride = 0.13
+lift = 0.07
+duty = 0.6
+bob = 0.008
+[action.scuttle.keys]
+"bell.roll" = [6.0, 0.0, -6.0, 0.0]
+"bell.pitch" = [-6.0, -10.0, -6.0, -10.0]
+
+# PREPARE: every leg plants; the bell rocks harder and harder (the telegraph is the SWING, no particles)
+[action.prepare]
+type = "poses"
+frames = 3
+hold = [10, 8, 8]
+[action.prepare.keys]
+"bell.roll" = [-9.0, 11.0, -17.0]
+"bell.pitch" = [-9.0, -9.0, -2.0]
+"body.z" = [0.0, -0.008, -0.016]
+[action.prepare.feet]
+"leg.L1" = ["home", "plant", "plant"]
+"leg.R1" = ["home", "plant", "plant"]
+"leg.L2" = ["home", "plant", "plant"]
+"leg.R2" = ["home", "plant", "plant"]
+"leg.L3" = ["home", "plant", "plant"]
+"leg.R3" = ["home", "plant", "plant"]
+
+# ATTACK: wind the bell over, SLAM it down, and the ring of sound expands from under it
+[action.attack]
+type = "poses"
+frames = 3
+hold = [4, 3, 10]
+[action.attack.keys]
+"bell.roll" = [20.0, -4.0, 0.0]
+"bell.pitch" = [-16.0, 14.0, 5.0]
+"body.z" = [0.0, -0.035, -0.012]
+"shock.scale" = [0.01, 0.62, 1.18]
+[action.attack.feet]
+"leg.L1" = ["home", "plant", "plant"]
+"leg.R1" = ["home", "plant", "plant"]
+"leg.L2" = ["home", "plant", "plant"]
+"leg.R2" = ["home", "plant", "plant"]
+"leg.L3" = ["home", "plant", "plant"]
+"leg.R3" = ["home", "plant", "plant"]
+
+# ---- the painter ------------------------------------------------------------------------------------------------------
+[paint]
+cover = 0.42
+smooth = 0.6
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["eye", "glow", "detail"]
+no_outline = ["bone"]
+over = ["body", "bone", "detail", "eye", "glow", "tarnish", "bronze"]
+
+[palette]
+# bronze (4) + tarnish (2) + bone (3) + the dark body (2) + one amber eye + the ring of sound
+base = ["#3a2410", "#6a4220", "#a8742c", "#e8b050",
+        "#243c34", "#5a8a74",
+        "#5c4e3e", "#a69676", "#e8dcc0",
+        "#1c1612", "#382c24",
+        "#ffb824", "#ffe48c", "#100a06", "#080402"]

@@ -1,0 +1,25 @@
+{
+ "class": "obj32",
+ "frames": 13,
+ "per_frame": {
+  "idle_0": 13,
+  "idle_1": 12,
+  "idle_2": 13,
+  "hop_0": 10,
+  "hop_1": 11,
+  "hop_2": 11,
+  "hop_3": 10,
+  "prepare_0": 10,
+  "prepare_1": 10,
+  "prepare_2": 11,
+  "attack_0": 9,
+  "attack_1": 11,
+  "attack_2": 12
+ },
+ "unique_tiles_all": 127,
+ "rom_bytes_all": 4064,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 4,
+ "max_tiles_one_frame": 13,
+ "name": "thornhopper"
+}

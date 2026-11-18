@@ -1,0 +1,26 @@
+{
+ "class": "obj32",
+ "frames": 14,
+ "per_frame": {
+  "idle_0": 15,
+  "idle_1": 14,
+  "idle_2": 15,
+  "idle_3": 14,
+  "scuttle_0": 15,
+  "scuttle_1": 14,
+  "scuttle_2": 15,
+  "scuttle_3": 14,
+  "prepare_0": 15,
+  "prepare_1": 15,
+  "prepare_2": 15,
+  "attack_0": 15,
+  "attack_1": 14,
+  "attack_2": 14
+ },
+ "unique_tiles_all": 168,
+ "rom_bytes_all": 5376,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 4,
+ "max_tiles_one_frame": 15,
+ "name": "bellwretch"
+}

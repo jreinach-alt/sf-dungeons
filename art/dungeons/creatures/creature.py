@@ -47,7 +47,7 @@ import blender_common as BC  # noqa: E402
 import kit as K  # noqa: E402
 import gaits  # noqa: E402
 import spec as SP  # noqa: E402
-from render_style import bar, hash01  # noqa: E402  (shared mesh helpers)
+from sugar import expand_sugar, wave_keys  # noqa: E402  (pure: tested without Blender)
 
 AXIS = {"pitch": Vector((1, 0, 0)), "roll": Vector((0, -1, 0)), "yaw": Vector((0, 0, 1))}
 
@@ -143,6 +143,51 @@ def dome(kit, name, c, r, role, p):
 # ---------------------------------------------------------------------------
 # spec -> parts
 # ---------------------------------------------------------------------------
+def lathe(kit, name, c, pts, roles, nu=36):
+    """A surface of revolution about the vertical axis: pts = [(radius, z), ...] bottom to top,
+    one role per segment. A last point with radius 0 closes the top in a fan (a bell, a dome)."""
+    cx, cy, cz = c
+    verts, faces, frole = [], [], []
+    rings = []
+    for r, z in pts:
+        if r <= 1e-9:
+            verts.append((cx, cy, cz + z))
+            rings.append(("apex", len(verts) - 1))
+        else:
+            base = len(verts)
+            verts += [(cx + r * math.cos(2 * math.pi * k / nu), cy + r * math.sin(2 * math.pi * k / nu), cz + z) for k in range(nu)]
+            rings.append(("ring", base))
+    for s in range(len(pts) - 1):
+        (ka, a), (kb, b) = rings[s], rings[s + 1]
+        for k in range(nu):
+            k2 = (k + 1) % nu
+            if ka == "ring" and kb == "ring":
+                faces.append((a + k, a + k2, b + k2, b + k))
+            elif ka == "ring":
+                faces.append((a + k, a + k2, b))
+            else:
+                faces.append((a, b + k2, b + k))
+            frole.append(roles[s])
+    return BC.make_obj(kit, name, verts, faces, frole, smooth=48.0)
+
+
+def ring_mesh(kit, name, c, R, r, role, flat=0.45, seg=48, tseg=8):
+    """A flat torus: an expanding shockwave, a halo. `flat` squashes the minor radius in z."""
+    cx, cy, cz = c
+    verts, faces = [], []
+    for i in range(seg):
+        a = 2 * math.pi * i / seg
+        for j in range(tseg):
+            b = 2 * math.pi * j / tseg
+            rr = R + r * math.cos(b)
+            verts.append((cx + rr * math.cos(a), cy + rr * math.sin(a), cz + flat * r * math.sin(b)))
+    for i in range(seg):
+        for j in range(tseg):
+            a0, a1 = i * tseg + j, ((i + 1) % seg) * tseg + j
+            faces.append((a0, a1, a1 - j + (j + 1) % tseg, a0 - j + (j + 1) % tseg))
+    return BC.make_obj(kit, name, verts, faces, role, smooth=60.0)
+
+
 def mirrored(p):
     q = dict(p)
     q["name"] = p["name"] + ".m"
@@ -157,7 +202,14 @@ def mirrored(p):
 def make_part(kit, p):
     k = p["kind"]
     if k == "ellipsoid":
-        return BC.ellipsoid(kit, p["name"], tuple(p["c"]), tuple(p["r"]), p["role"])
+        ob = BC.ellipsoid(kit, p["name"], tuple(p["c"]), tuple(p["r"]), p["role"])
+        if "rot" in p:                                        # degrees, Blender XYZ order, about the centre
+            ob.rotation_euler = tuple(math.radians(v) for v in p["rot"])
+        return ob
+    if k == "lathe":
+        return lathe(kit, p["name"], p["c"], [tuple(v) for v in p["pts"]], p["roles"], nu=p.get("nu", 36))
+    if k == "ring":
+        return ring_mesh(kit, p["name"], p["c"], p["radius"], p["thick"], p["role"], flat=p.get("flat", 0.45), seg=p.get("seg", 48))
     if k == "limb":
         return K.limb(kit, p["name"], tuple(p["a"]), tuple(p["b"]), p["radius"], p["role"], seg=p.get("seg", 10))
     if k == "box":
@@ -181,7 +233,11 @@ def expand_legset(ls):
         H, F = Vector(ls["hip"][tag]), Vector(ls["foot"][tag])
         out = Vector((H.x - cx, H.y - cy, 0.0))
         out = out.normalized() if out.length > 1e-6 else Vector((1, 0, 0))
-        K_ = (H + F) / 2 + Vector((0, 0, kl)) + out * ko
+        if "knee_vec" in ls:                                  # an explicit knee offset: x is mirrored for R legs
+            kv = ls["knee_vec"]
+            K_ = (H + F) / 2 + Vector((kv[0] * (-1.0 if tag.startswith("R") else 1.0), kv[1], kv[2]))
+        else:
+            K_ = (H + F) / 2 + Vector((0, 0, kl)) + out * ko
         nm = f"{ls['name']}.{tag}"
         bones.append(dict(name=nm + ".1", parent=ls["parent"], head=list(H), tail=list(K_)))
         bones.append(dict(name=nm + ".2", parent=nm + ".1", head=list(K_), tail=list(F)))
@@ -277,11 +333,21 @@ def pose_values(rig, values):
     for pb in rig.pose.bones:
         pb.rotation_quaternion = Quaternion()
         pb.location = Vector()
-    rots, trans = {}, {}
+        pb.scale = Vector((1, 1, 1))
+    rots, trans, scl = {}, {}, {}
     for ch, v in values.items():
         bone, _, kind = ch.rpartition(".")
         pb = rig.pose.bones[bone]
         rest = pb.bone.matrix_local.to_3x3()
+        if kind in ("scale", "stretch"):
+            if kind == "scale":                                   # uniform, about the bone head
+                f = Vector((v, v, v))
+            else:                                                 # squash and stretch: volume-preserving along the bone
+                s = max(v, 0.01)
+                f = Vector((s ** -0.5, s, s ** -0.5))
+            cur = scl.get(bone, Vector((1, 1, 1)))
+            scl[bone] = Vector((cur.x * f.x, cur.y * f.y, cur.z * f.z))     # both on one bone MULTIPLY
+            continue
         if kind in ("x", "y", "z"):
             vec = Vector((v if kind == "x" else 0.0, v if kind == "y" else 0.0, v if kind == "z" else 0.0))
             trans[bone] = trans.get(bone, Vector()) + rest.inverted() @ vec
@@ -292,12 +358,18 @@ def pose_values(rig, values):
         rig.pose.bones[b].rotation_quaternion = q
     for b, t in trans.items():
         rig.pose.bones[b].location = t
+    for b, s in scl.items():
+        rig.pose.bones[b].scale = s
 
 
 def frame_plan(spec, an, a, targets, homes):
     """-> per frame: (bone channel values, {leg: foot position}) for an action."""
     n = a["frames"]
-    keys = a.get("keys", {})
+    keys = dict(a.get("keys", {}))
+    for w in a.get("wave", []):                       # tendrils, tails, hair: a travelling wave down a chain
+        keys.update(wave_keys(w, n))
+    for ch, val in spec.get("default", {}).get("keys", {}).items():   # held in every action unless it keys the channel
+        keys.setdefault(ch, [val] * n)
     plan = []
     if a["type"] == "gait":
         ls = next(x for x in spec["legset"] if x["name"] == a["legset"])
@@ -334,6 +406,7 @@ def key_plan(rig, targets, plan, per_dir=None):
         for pb in rig.pose.bones:
             pb.keyframe_insert("rotation_quaternion", frame=i)
             pb.keyframe_insert("location", frame=i)
+            pb.keyframe_insert("scale", frame=i)
         for leg, pos in feet.items():
             t = targets[leg]
             t.location = Vector(pos)
@@ -395,7 +468,9 @@ def main():
     BC.add_ground()
     # ---- parts + bones + ik ---------------------------------------------------------
     bones = [dict(b) for b in spec.get("bone", [])]
-    parts = [dict(p) for p in spec.get("part", [])]
+    parts = []
+    for p in spec.get("part", []):
+        parts += expand_sugar(dict(p))
     iks = []
     for ls in spec.get("legset", []):
         b, p, i = expand_legset(ls)

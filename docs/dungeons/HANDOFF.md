@@ -49,6 +49,12 @@ spider (8-leg IK skitter, bite) and a 112×112 BG tortoise boss that plods, rise
 and stomps, with tile budgets measured. Agent manual: `.claude/skills/creature-art.md`. **Owner
 decisions are in 16 §7 (the quality ceiling, what to build next, size classes).**
 
+## 2.3 The four briefed enemies (2026-11-17)
+
+`docs/dungeons/17`: Bellwretch, Thornhopper, Candlemaw and Crownling, built from the owner's brief
+(`docs/dungeons/refs/`, reference only) with the creature pipeline. ~36.5 KB of OBJ CHR for all four, both
+facings. None has had a hand-cleanup pass; Crownling needs it most. Decisions are in 17 §6.
+
 ## 3. Next, in order
 
 1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,

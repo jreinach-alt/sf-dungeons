@@ -28,6 +28,10 @@ and writes `art/dungeons/creatures/out/<name>/`: `sheet.png` (every frame, scale
 - `[[bone]]`, then `[[part]]`: `ellipsoid | limb | box | cone | tube | dome`, each with a `role` and
   a `bone` (rigid binding). `mirror = true` makes the x-mirrored twin. `dome` takes `seam_role`: the
   hex-scute pattern is TWO ROLES, so the pattern is painted detail and not shading.
+- More generic part and motion features (docs 17 §3): `lathe` (a surface of revolution), `ring`,
+  `spikes` (n cones around a ring: crown points, drips), `petals`; pose channels `scale` and
+  `stretch` (squash and stretch, MULTIPLIED when both are keyed); `[action.*.wave]` (a travelling
+  wave down a bone chain: tendrils, tails); `[default.keys]`; `knee_vec` on a legset.
 - `[[legset]]`: an IK limb set. Give tags, a hip and a home foot per leg; it generates the two bones,
   the knee, the IK target, the pole (its roll is FITTED against the rest pose), the meshes, a joint
   ball, optional `pad` and `claws`. List the legs in the order the gait expects (see `gaits.py`).

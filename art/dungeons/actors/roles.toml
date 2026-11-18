@@ -184,3 +184,247 @@ material = 8
 kind = "fixed"
 index = 14
 vote = 1.2
+
+# --- the four owner-briefed enemies (docs/dungeons/17) -----------------------------------------
+
+[family.bellwretch]            # a haunted bell over a hermit-crab body
+outline = 15
+shadow  = 15
+cover   = 0.5
+
+[[family.bellwretch.role]]
+name = "bronze"
+material = 2
+kind = "ramp"
+lo = 1
+hi = 4
+thresholds = [0.25, 0.5, 0.75]
+vote = 1.0
+
+[[family.bellwretch.role]]
+name = "tarnish"
+material = 3
+kind = "ramp"
+lo = 5
+hi = 6
+thresholds = [0.5]
+vote = 1.2
+
+[[family.bellwretch.role]]
+name = "bone"
+material = 4
+kind = "ramp"
+lo = 7
+hi = 9
+thresholds = [0.33, 0.67]
+vote = 1.0
+
+[[family.bellwretch.role]]
+name = "body"
+material = 5
+kind = "ramp"
+lo = 10
+hi = 11
+thresholds = [0.5]
+vote = 1.0
+
+[[family.bellwretch.role]]
+name = "eye"
+material = 6
+kind = "fixed"
+index = 12
+vote = 2.6
+
+[[family.bellwretch.role]]
+name = "glow"
+material = 7
+kind = "fixed"
+index = 13
+vote = 2.0
+
+[[family.bellwretch.role]]
+name = "detail"
+material = 8
+kind = "fixed"
+index = 14
+vote = 1.4
+
+[family.thornhopper]            # a frog with a flower head and mantis legs
+outline = 15
+shadow  = 15
+cover   = 0.5
+
+[[family.thornhopper.role]]
+name = "skin"
+material = 2
+kind = "ramp"
+lo = 1
+hi = 4
+thresholds = [0.25, 0.5, 0.75]
+vote = 1.0
+
+[[family.thornhopper.role]]
+name = "leg"
+material = 3
+kind = "ramp"
+lo = 5
+hi = 6
+thresholds = [0.5]
+vote = 1.0
+
+[[family.thornhopper.role]]
+name = "petal"
+material = 4
+kind = "ramp"
+lo = 7
+hi = 9
+thresholds = [0.33, 0.67]
+vote = 1.2
+
+[[family.thornhopper.role]]
+name = "eyeball"
+material = 5
+kind = "fixed"
+index = 10
+vote = 2.6
+
+[[family.thornhopper.role]]
+name = "pupil"
+material = 6
+kind = "fixed"
+index = 11
+vote = 2.8
+
+[[family.thornhopper.role]]
+name = "belly"
+material = 7
+kind = "fixed"
+index = 12
+vote = 1.2
+
+[[family.thornhopper.role]]
+name = "detail"
+material = 8
+kind = "fixed"
+index = 13
+vote = 1.4
+
+[family.candlemaw]            # a wax-covered anglerfish-tortoise with a blue flame
+outline = 15
+shadow  = 15
+cover   = 0.5
+
+[[family.candlemaw.role]]
+name = "wax"
+material = 2
+kind = "ramp"
+lo = 1
+hi = 4
+thresholds = [0.25, 0.5, 0.75]
+vote = 1.0
+
+[[family.candlemaw.role]]
+name = "hide"
+material = 3
+kind = "ramp"
+lo = 5
+hi = 6
+thresholds = [0.5]
+vote = 1.0
+
+[[family.candlemaw.role]]
+name = "maw"
+material = 4
+kind = "fixed"
+index = 7
+vote = 1.6
+
+[[family.candlemaw.role]]
+name = "tooth"
+material = 5
+kind = "fixed"
+index = 8
+vote = 2.2
+
+[[family.candlemaw.role]]
+name = "flame"
+material = 6
+kind = "ramp"
+lo = 9
+hi = 11
+thresholds = [0.33, 0.67]
+vote = 2.0
+
+[[family.candlemaw.role]]
+name = "core"
+material = 7
+kind = "fixed"
+index = 12
+vote = 2.4
+
+[[family.candlemaw.role]]
+name = "detail"
+material = 8
+kind = "fixed"
+index = 13
+vote = 1.4
+
+[family.crownling]            # a floating porcelain crown over one violet eye
+outline = 15
+shadow  = 15
+cover   = 0.5
+
+[[family.crownling.role]]
+name = "crown"
+material = 2
+kind = "ramp"
+lo = 1
+hi = 4
+thresholds = [0.25, 0.5, 0.75]
+vote = 1.0
+
+[[family.crownling.role]]
+name = "crack"
+material = 3
+kind = "fixed"
+index = 5
+vote = 1.6
+
+[[family.crownling.role]]
+name = "tendril"
+material = 4
+kind = "ramp"
+lo = 6
+hi = 8
+thresholds = [0.33, 0.67]
+vote = 1.0
+
+[[family.crownling.role]]
+name = "eye"
+material = 5
+kind = "ramp"
+lo = 9
+hi = 10
+thresholds = [0.5]
+vote = 1.8
+
+[[family.crownling.role]]
+name = "pupil"
+material = 6
+kind = "fixed"
+index = 11
+vote = 2.8
+
+[[family.crownling.role]]
+name = "beam"
+material = 7
+kind = "fixed"
+index = 12
+vote = 2.2
+
+[[family.crownling.role]]
+name = "detail"
+material = 8
+kind = "fixed"
+index = 13
+vote = 1.4

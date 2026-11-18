@@ -1,0 +1,26 @@
+{
+ "class": "obj32",
+ "frames": 14,
+ "per_frame": {
+  "idle_0": 14,
+  "idle_1": 14,
+  "idle_2": 14,
+  "waddle_0": 14,
+  "waddle_1": 14,
+  "waddle_2": 14,
+  "waddle_3": 14,
+  "prepare_0": 14,
+  "prepare_1": 14,
+  "prepare_2": 14,
+  "attack_0": 15,
+  "attack_1": 15,
+  "attack_2": 14,
+  "attack_3": 15
+ },
+ "unique_tiles_all": 167,
+ "rom_bytes_all": 5344,
+ "oam_entries_per_actor": 1,
+ "slivers_per_line": 4,
+ "max_tiles_one_frame": 15,
+ "name": "candlemaw"
+}

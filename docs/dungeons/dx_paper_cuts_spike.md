@@ -262,3 +262,24 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
   error behind `>/dev/null`. Never silence the thing you are checking.
 - **easy / LOW — a new size class is a table row.** `budget.SIZE_CLASSES` plus a role family is all a
   new kind of creature adds to the code; everything else is data.
+
+## The four briefed enemies (2026-11-17)
+
+- **surprise / MEDIUM — two keys on one bone overwrote each other.** `flame.scale` and `flame.stretch`
+  on the same bone: the second assignment won, so a flame meant to vanish stretched sideways into a
+  blue disc. Found by LOOKING at the sheet, not by any test; the fix (multiply) is now generic and the
+  skill file says so. A channel-combination rule belongs in a test next time.
+- **clunky / MEDIUM — one anchor per action serves both facings.** Every one of the four creatures
+  needed a hand-tuned attack anchor, because a lunge toward the camera needs room below and a lunge to
+  the side needs it in front. *Fix:* per-facing anchors in the spec, or have `creature.py` print the
+  per-frame bounding box so the anchor is chosen once.
+- **surprise / MEDIUM — negative space needs geometry.** Crownling's closed dome erased the gaps between
+  its points; an open band with a shallow hollow restored the crown. At 32×32 the *gaps* are the detail.
+- **clunky / LOW — the bestiary's tile budget was first reported for one facing only.** `report.py`
+  defaults to `down`; the both-facings cost is roughly double (36.5 KB for four, not 18). A budget
+  tool should say which facings it counted.
+- **easy / LOW — a 600-line spec is fine when it is generated.** Crownling's 12 tendril bones and 24
+  parts were emitted by a short script; the committed TOML stays plain data. If a creature wants many
+  repeated limbs, a `chain` generator in the spec (like `legset`) is the next shorthand to add.
+- **easy / LOW — silhouette-first design worked.** One mass plus one accent colour per creature made them
+  separable before shading (17 §5.4).

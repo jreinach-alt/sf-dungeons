@@ -27,9 +27,11 @@ import budget  # noqa: E402
 import gaits  # noqa: E402
 
 PART_KINDS = {"ellipsoid": {"c", "r"}, "limb": {"a", "b", "radius"}, "box": {"c", "s"},
-              "cone": {"a", "b", "radius"}, "tube": {"pts"}, "dome": {"c", "r"}}
+              "cone": {"a", "b", "radius"}, "tube": {"pts"}, "dome": {"c", "r"},
+              "lathe": {"c", "pts", "roles"}, "ring": {"c", "radius", "thick"},
+              "spikes": {"c", "n", "R", "len", "radius"}, "petals": {"c", "n", "r", "radius"}}
 ACTION_TYPES = {"keys", "gait", "poses"}
-CHANNEL_KINDS = ("pitch", "roll", "yaw", "x", "y", "z")
+CHANNEL_KINDS = ("pitch", "roll", "yaw", "x", "y", "z", "scale", "stretch")
 
 
 def load(path) -> dict:
@@ -110,6 +112,10 @@ def validate(s: dict) -> list:
             need(bone in bones, f"action {an}: channel {ch!r}: no bone {bone!r}")
             need(kind in CHANNEL_KINDS, f"action {an}: channel {ch!r}: kind {kind!r} not in {CHANNEL_KINDS}")
             need(len(seq) == n, f"action {an}: channel {ch!r} has {len(seq)} values for {n} frames")
+        for w in a.get("wave", []):
+            for b in w.get("bones", []):
+                need(b in bones, f"action {an}: wave bone {b!r} does not exist")
+            need("amp" in w, f"action {an}: a wave needs `amp`")
         if t == "gait":
             ls = legsets.get(a.get("legset"))
             need(ls is not None, f"action {an}: legset {a.get('legset')!r} does not exist")

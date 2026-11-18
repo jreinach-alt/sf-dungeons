@@ -1,0 +1,250 @@
+# candlemaw — anglerfish + tortoise + melting candle (owner brief: docs/dungeons/refs/).
+# A hunched dark quadruped under a mound of dripping ivory wax; a blue flame floats above its back;
+# an enormous horizontal mouth with four teeth. A slow, uneven waddle (the wax sways, the flame
+# flickers independently). Attack: the flame GOES OUT as the warning, the mouth opens impossibly
+# wide, then a sudden forward lunge and bite. Lumbering: slow holds, a long wind-up, a fast snap.
+name = "candlemaw"
+family = "candlemaw"
+size_class = "obj32"
+shadow = [0.3, 0.24]
+
+[camera]
+depression_deg = 35.0
+px_per_unit = 44
+supersample = 8
+margin_px = 4
+box = [32, 32]
+anchor = [16, 24.0]
+yaw_deg = { right = 90.0, up = 180.0, down = 0.0 }
+
+[light]
+samples = 2
+sun_dir = [-0.50, 0.50, -0.60]
+
+[[bone]]
+name = "root"
+parent = ""
+head = [0, 0, 0]
+tail = [0, 0, 0.1]
+[[bone]]
+name = "body"
+parent = "root"
+head = [0, 0.06, 0.14]
+tail = [0, -0.12, 0.14]
+[[bone]]
+name = "shape"
+parent = "body"
+head = [0, 0, 0.15]
+tail = [0, 0, 0.25]
+[[bone]]
+name = "flame"                    # floats above the back: sways (x) and flickers (stretch) on its own
+parent = "shape"
+head = [0, 0.03, 0.37]
+tail = [0, 0.03, 0.47]
+[[bone]]
+name = "jaw"                      # the lower jaw: +pitch swings its front DOWN, opening the mouth
+parent = "body"
+head = [0, -0.12, 0.12]
+tail = [0, -0.24, 0.12]
+
+# ---- body, wax and maw -----------------------------------------------------------------------------------------------
+[[part]]
+kind = "ellipsoid"
+name = "hide"
+c = [0, -0.01, 0.15]
+r = [0.205, 0.25, 0.105]
+role = "hide"
+bone = "shape"
+[[part]]
+kind = "ellipsoid"
+name = "mound"
+c = [0, 0.10, 0.27]
+r = [0.185, 0.19, 0.115]
+role = "wax"
+bone = "shape"
+[[part]]
+kind = "ellipsoid"
+name = "lump"
+c = [-0.05, 0.14, 0.34]
+r = [0.095, 0.10, 0.065]
+role = "wax"
+bone = "shape"
+[[part]]
+kind = "spikes"
+name = "drip"
+c = [0, 0.10, 0.25]
+n = 10
+R = 0.172
+len = [0.05, 0.13]
+radius = 0.03
+dir = "down"
+lean = 0.02
+role = "wax"
+bone = "shape"
+[[part]]
+kind = "ellipsoid"
+name = "maw"
+c = [0, -0.215, 0.15]
+r = [0.205, 0.085, 0.105]
+role = "maw"
+bone = "body"
+[[part]]
+kind = "cone"
+name = "tooth_up"
+a = [0.085, -0.27, 0.215]
+b = [0.085, -0.285, 0.12]
+radius = 0.036
+role = "tooth"
+bone = "body"
+mirror = true
+[[part]]
+kind = "ellipsoid"
+name = "lowerjaw"
+c = [0, -0.21, 0.065]
+r = [0.195, 0.085, 0.048]
+role = "hide"
+bone = "jaw"
+[[part]]
+kind = "cone"
+name = "tooth_dn"
+a = [0.085, -0.27, 0.07]
+b = [0.085, -0.285, 0.155]
+radius = 0.036
+role = "tooth"
+bone = "jaw"
+mirror = true
+
+# ---- the flame -----------------------------------------------------------------------------------------------------------------
+[[part]]
+kind = "limb"
+name = "wick"
+a = [0, 0.03, 0.33]
+b = [0, 0.03, 0.375]
+radius = 0.01
+role = "detail"
+bone = "flame"
+[[part]]
+kind = "cone"
+name = "flame"
+a = [0, 0.03, 0.37]
+b = [0.005, 0.03, 0.53]
+radius = 0.055
+role = "flame"
+bone = "flame"
+seg = 8
+[[part]]
+kind = "cone"
+name = "core"
+a = [0, 0.03, 0.375]
+b = [0.003, 0.03, 0.47]
+radius = 0.027
+role = "core"
+bone = "flame"
+seg = 8
+
+# ---- four stubby legs: listed FL, FR, HL, HR ----------------------------------------------------------------------------------
+[[legset]]
+name = "leg"
+parent = "body"
+tags = ["FL", "FR", "HL", "HR"]
+radius = [0.062, 0.054]
+role = "hide"
+knee_lift = 0.02
+knee_out = 0.05
+pole_up = 0.2
+pole_out = 0.1
+[legset.pad]
+r = [0.075, 0.095, 0.035]
+role = "hide"
+[legset.hip]
+FL = [0.15, -0.12, 0.13]
+FR = [-0.15, -0.12, 0.13]
+HL = [0.16, 0.14, 0.13]
+HR = [-0.16, 0.14, 0.13]
+[legset.foot]
+FL = [0.20, -0.14, 0.0]
+FR = [-0.20, -0.14, 0.0]
+HL = [0.21, 0.16, 0.0]
+HR = [-0.21, 0.16, 0.0]
+
+# ---- actions -------------------------------------------------------------------------------------------------------------------------
+[action.idle]
+type = "keys"
+frames = 3
+hold = [14, 14, 14]
+[action.idle.keys]
+"flame.stretch" = [1.0, 1.18, 0.88]
+"flame.x" = [0.01, -0.012, 0.004]
+"shape.stretch" = [1.0, 0.985, 1.0]
+"body.z" = [0.0, 0.003, 0.0]
+
+[action.waddle]
+type = "gait"
+frames = 4
+hold = [10, 10, 10, 10]
+legset = "leg"
+gait = "walk4"
+stride = 0.12
+lift = 0.05
+duty = 0.8
+bob = 0.01
+[action.waddle.keys]
+"body.roll" = [4.0, 0.0, -4.0, 0.0]
+"shape.roll" = [-3.0, 0.0, 3.0, 0.0]
+"flame.x" = [0.012, -0.01, 0.005, -0.014]
+"flame.stretch" = [1.12, 0.9, 1.2, 0.95]
+
+# PREPARE: the flame goes OUT (the warning), the mouth begins to open, the legs plant
+[action.prepare]
+type = "poses"
+frames = 3
+hold = [10, 9, 11]
+[action.prepare.keys]
+"flame.stretch" = [0.9, 0.4, 0.1]
+"flame.scale" = [1.0, 0.55, 0.04]
+"jaw.pitch" = [4.0, 20.0, 34.0]
+"body.z" = [0.0, -0.01, -0.025]
+"body.pitch" = [0.0, -3.0, -6.0]
+[action.prepare.feet]
+"leg.FL" = ["home", "plant", "plant"]
+"leg.FR" = ["home", "plant", "plant"]
+"leg.HL" = ["home", "plant", "plant"]
+"leg.HR" = ["home", "plant", "plant"]
+
+# ATTACK: gape (impossibly wide), LUNGE, SNAP, recover
+[action.attack]
+type = "poses"
+frames = 4
+hold = [5, 3, 3, 9]
+anchor = [14, 21.5]
+[action.attack.keys]
+"jaw.pitch" = [52.0, 56.0, 3.0, 16.0]
+"body.y" = [0.01, -0.065, -0.09, -0.035]
+"body.z" = [-0.02, 0.0, -0.03, -0.015]
+"body.pitch" = [-8.0, 4.0, 10.0, 2.0]
+"flame.scale" = [0.04, 0.04, 0.3, 0.9]
+"flame.stretch" = [0.1, 0.1, 0.6, 1.0]
+[action.attack.feet]
+"leg.FL" = ["home", { home = [0.0, -0.06, 0.0] }, { home = [0.0, -0.1, 0.0] }, { home = [0.0, -0.04, 0.0] }]
+"leg.FR" = ["home", { home = [0.0, -0.06, 0.0] }, { home = [0.0, -0.1, 0.0] }, { home = [0.0, -0.04, 0.0] }]
+"leg.HL" = ["home", "plant", "plant", { home = [0.0, -0.03, 0.0] }]
+"leg.HR" = ["home", "plant", "plant", { home = [0.0, -0.03, 0.0] }]
+
+[paint]
+cover = 0.42
+smooth = 0.6
+cluster_passes = 3
+rim = 1
+contact = true
+lit_soft = true
+shadow = "dither"
+no_rim = ["maw", "tooth", "flame", "core", "detail"]
+over = ["maw", "hide", "tooth", "detail", "wax", "flame", "core"]
+
+[palette]
+# ivory wax (4) + a dark purple hide (2) + a black maw and bone teeth + a blue flame (3 + a white core)
+base = ["#5a4a38", "#9a8462", "#d6c294", "#f6e8c0",
+        "#2a1c30", "#4e3858",
+        "#0c060e", "#f2e8cc",
+        "#2646cc", "#4a84f2", "#94ccff",
+        "#eef8ff", "#1c1020", "#3a2c46", "#0a060c"]
