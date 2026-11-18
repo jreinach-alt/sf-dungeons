@@ -1,0 +1,46 @@
+# dgng_m7 — the giant boss's Mode 7 plane and its per-tick matrix (docs/dungeons/20). Scene-scoped.
+#
+# ONE still image (the Crownling, rendered looking straight down) on the 128x128 wrapping plane, uploaded once at
+# enter. Everything it does afterwards is REGISTERS: the score carries each tick's rotation, magnification,
+# pivot and scroll, the main thread drops them into a 16-byte DP shadow, and the NMI hook commits the shadow to
+# the eight Mode 7 ports (the m7_affine idiom: nothing here touches a PPU port outside VBlank, so the matrix cannot
+# tear). That is why a boss the whole width of the screen can spin as fast as we like for no streaming at all.
+#
+# WHY NOT `m7_affine`: it solves a heading from a 256-entry LUT at one fixed scale. This boss needs a magnification
+# (2.25x) and arbitrary angles, and the director has already computed every word, so the shadow is filled from the
+# score and the LUT would be 2 KB of unused ROM.
+#
+# COLOUR 0 HAS ONE OWNER. Mode 7 is 8bpp with ABSOLUTE CGRAM indices, so the plane's palette is pinned at 0 and word 0
+# is both the plane's index 0 (transparent) and the BACKDROP; a scene composing `backdrop` beside this must refuse.
+# Here word 0 is the floor colour, so the transparent parts of the plane show the floor.
+name = "dgng_m7"
+role = "feature"
+depends = ["dgng_rom"]
+
+[[claims.dma_init]]
+name = "m7_up"
+channel = 0
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+
+[[claims.vram]]
+name = "m7"
+kind = "mode7"
+
+[[claims.cgram]]
+name = "m7_pal"
+words = 16
+at = 0
+
+[[claims.dp]]
+name = "m7sh"
+bytes = 16               # +0 M7A +2 M7B +4 M7C +6 M7D +8 M7X +10 M7Y +12 M7HOFS +14 M7VOFS, written by the tick,
+                         # committed by the NMI hook. No `[init] zero`: the tick writes all 16 before the first NMI
+
+[[claims.reg]]
+name = "m7_matrix"
+registers = ["M7A", "M7B", "M7C", "M7D", "M7X", "M7Y", "BG1HOFS", "BG1VOFS"]
+
+[[claims.reg]]
+name = "m7_display"
+registers = ["BGMODE", "TM", "M7SEL"]

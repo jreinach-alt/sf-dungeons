@@ -1,0 +1,32 @@
+# dgng_rom — the giant Mode 7 boss's art and score, as ROM data (docs/dungeons/20).
+#
+# Converted by tools/gen_dgn_giant_assets.py from COMMITTED strips; the build never runs Blender. A GLOBAL blob
+# feature for the reason sprg_rom states. Each claim site in game/dgn_giant/main.asm .asserts its blob's bank/addr
+# against the allocator's emitted symbols.
+name = "dgng_rom"
+role = "blob"
+
+[[claims.rom]]
+name = "dgng_m7_rom"
+bytes = 32768            # the whole Mode 7 VRAM: 128x128 map bytes interleaved with 256 tiles of 8bpp CHR. One DMA
+                         # (mode 1, VMDATAL/VMDATAH) and exactly one bank window
+
+[[claims.rom]]
+name = "dgng_hero_rom"
+bytes = 9216             # the players' 18 frames x 512 B (4x4-tile slot images), streamed with back buffers
+
+[[claims.rom]]
+name = "dgng_pal_rom"
+bytes = 96               # BG palette (16 words: index 0 = backdrop) + OBJ palettes 0 (P1) and 1 (P2)
+
+[[claims.rom]]
+name = "dgng_score_rom"
+bytes = 16384            # 290 ticks x 33 B: 4 OAM entries, the hi byte, the 16-byte Mode 7 shadow
+
+[[claims.rom]]
+name = "dgng_cmds_rom"
+bytes = 4096             # the players' DMA rows, 6 B each, the entry-state rows last
+
+[[claims.rom]]
+name = "dgng_ptr_rom"
+bytes = 1024             # T + 2 u16 byte offsets into the command stream

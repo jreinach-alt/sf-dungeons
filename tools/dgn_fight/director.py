@@ -330,8 +330,20 @@ def src_of(actor: str, frame: int, row: int):
     return 3, frame * 512 + row * 128          # the players share one blob (id 3), a facing-major 512 B slot image
 
 
-def displayed_frames(states):
-    return {a: [s.frame for s in states[a]] for a in ("boss", "p1", "p2")}
+class Layout:
+    """Where each streamed actor's buffers live in VRAM and where its rows come from in ROM. The fight's own is
+    FIGHT_LAYOUT (the module defaults); another rail passes its own (tools/dgn_giant: two players only)."""
+
+    def __init__(self, slots, vmadd, src):
+        self.slots, self.vmadd_of, self.src_of = slots, vmadd, src
+
+
+FIGHT_LAYOUT = Layout(SLOTS, vmadd_of, src_of)
+
+
+def displayed_frames(states, layout=None):
+    actors = (layout.slots if layout else SLOTS)
+    return {a: [s.frame for s in states[a]] for a in actors}
 
 
 VIRT = 100000                  # a frame id + VIRT is the same picture shown from the other buffer (the parity swap)
@@ -395,13 +407,14 @@ def plan_buffers(seq, naive=False):
     return bufsel, jobs, start[0]
 
 
-def schedule_rows(all_jobs, T, naive_actors=frozenset()):
+def schedule_rows(all_jobs, T, naive_actors=frozenset(), layout=None):
     """Assign every row of every job to a tick in its window (mod T), least-loaded first. Actors in `naive_actors`
     are not planned: each of their rows lands on the tick the frame changes. Returns
     ({tick: [(actor, dst, id, off, bytes, frame, buf, row)]}, bytes per tick, load per tick)."""
+    L = layout or FIGHT_LAYOUT
     rows = []                                   # (window length, deadline, actor, frame, buf, row, rel, d)
     for actor, jobs in all_jobs.items():
-        sl = SLOTS[actor]
+        sl = L.slots[actor]
         for frame, buf, rel, d in jobs:
             for row in range(sl["rows"]):
                 rows.append((d - rel, d, actor, frame % VIRT, buf, row, rel, d))
@@ -410,7 +423,7 @@ def schedule_rows(all_jobs, T, naive_actors=frozenset()):
     out = {}
     assign = []
     for _, _, actor, frame, buf, row, rel, d in rows:
-        sl = SLOTS[actor]
+        sl = L.slots[actor]
         if actor in naive_actors:
             t = d % T
         else:
@@ -425,7 +438,7 @@ def schedule_rows(all_jobs, T, naive_actors=frozenset()):
                 actor, frame, buf, row, rel, d, t = a
                 if actor in naive_actors:
                     continue
-                cost = SLOTS[actor]["row_bytes"] + ARM_BYTES
+                cost = L.slots[actor]["row_bytes"] + ARM_BYTES
                 best = min(range(rel, d + 1), key=lambda u: (load[u % T], u))
                 if load[best % T] + cost < load[t]:          # the move strictly lowers the heavier of the two ticks
                     load[t] -= cost
@@ -435,9 +448,9 @@ def schedule_rows(all_jobs, T, naive_actors=frozenset()):
             if not moved:
                 break
     for actor, frame, buf, row, rel, d, t in assign:
-        sl = SLOTS[actor]
-        bid, off = src_of(actor, frame, row)
-        out.setdefault(t, []).append((actor, vmadd_of(actor, buf, row), bid, off, sl["row_bytes"], frame, buf, row))
+        sl = L.slots[actor]
+        bid, off = L.src_of(actor, frame, row)
+        out.setdefault(t, []).append((actor, L.vmadd_of(actor, buf, row), bid, off, sl["row_bytes"], frame, buf, row))
     return out, [sum(c[4] for c in out.get(t, [])) for t in range(T)], load
 
 
@@ -445,29 +458,30 @@ MODES = {"choreo": frozenset(), "naive": frozenset({"boss", "p1", "p2"}),
          "hybrid": frozenset({"p1", "p2"})}     # hybrid: what a real game can do, the players follow human input
 
 
-def compile_stream(states, naive=False, mode=None):
+def compile_stream(states, naive=False, mode=None, layout=None):
     """The whole stream plan: per-tick buffer selection, per-tick DMA commands, the entry state.
 
     `mode`: 'choreo' plans every streamed actor; 'naive' plans none (one buffer, every row on the tick its frame
     changes); 'hybrid' plans the boss only, because the players' frames follow human input and cannot be known
     ahead. (`naive=True` is the old spelling of mode='naive'.)"""
+    L = layout or FIGHT_LAYOUT
     mode = mode or ("naive" if naive else "choreo")
     unplanned = MODES[mode]
-    T = len(states["boss"])
-    seqs = displayed_frames(states)
+    T = len(states[next(iter(L.slots))])
+    seqs = displayed_frames(states, L)
     bufsel, jobs, init = {}, {}, {}
-    for a in ("boss", "p1", "p2"):
+    for a in L.slots:
         bufsel[a], jobs[a], init[a] = plan_buffers(seqs[a], a in unplanned)
-    cmds, bytes_per_tick, load = schedule_rows(jobs, T, unplanned)
+    cmds, bytes_per_tick, load = schedule_rows(jobs, T, unplanned, L)
     # THE ENTRY STATE, by physical simulation at ROW level. A prefetch whose window straddles the loop's wrap has
     # its first rows in the previous iteration's tail, so the state the loop needs at tick 0 is NOT the planner's
     # frame-level start: it is whatever the rows leave behind after a full iteration, possibly a half-loaded
     # buffer. Play the stream until that repeats and load exactly it, in forced blank.
     cell = {}
-    for a in ("boss", "p1", "p2"):
+    for a in L.slots:
         for buf, frame in enumerate(init[a]):
             if frame is not None:
-                for row in range(SLOTS[a]["rows"]):
+                for row in range(L.slots[a]["rows"]):
                     cell[(a, buf, row)] = frame % VIRT
     prev = None
     for _ in range(4):
@@ -481,8 +495,8 @@ def compile_stream(states, naive=False, mode=None):
         raise AssertionError("the stream's end-of-loop state did not repeat")
     init_cmds = []
     for (a, buf, row), frame in sorted(cell.items()):
-        bid, off = src_of(a, frame, row)
-        init_cmds.append((a, vmadd_of(a, buf, row), bid, off, SLOTS[a]["row_bytes"], frame, buf, row))
+        bid, off = L.src_of(a, frame, row)
+        init_cmds.append((a, L.vmadd_of(a, buf, row), bid, off, L.slots[a]["row_bytes"], frame, buf, row))
     return {"bufsel": bufsel, "jobs": jobs, "cmds": cmds, "bytes": bytes_per_tick, "init_cmds": init_cmds,
             "init": init, "T": T}
 

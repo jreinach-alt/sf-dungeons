@@ -71,6 +71,15 @@ and proves the per-tick DMA load; the ROM only plays it back. Worst VBlank ends 
 unchoreographed. **Read 19 §4.1: the commit before this one broke `make microzero` (a cross-rail lint hazard);
 fixed in `4abbecd`. `make bare-check` has NOT been run on the tip.** Decisions are in 19 §7.
 
+## 2.6 The giant Mode 7 boss (2026-11-18)
+
+`docs/dungeons/20` and `game/dgn_giant`: the Crownling rendered top-down as ONE image on the Mode 7 plane, 254 px wide
+with only part of it ever in view; it spins up to 45°/tick, slides forward and slices at 45°, 90° and 135° while two
+players dodge, then retracts. All of it is the PPU matrix, so the boss costs about one scanline of VBlank (whole
+scene: scanline 232). `tools/dgn_giant/director.py::render_m7` is a reference renderer of the PPU's REAL Mode 7
+arithmetic, pixel-exact against the machine. Not yet tried: a floor or HUD under it (Mode 7 / Mode 1 split).
+Decisions are in 20 §8.
+
 ## 3. Next, in order
 
 1. ~~The model spike~~: done; see 14 §6, §6.1 (console) and §6.2 (16x32,

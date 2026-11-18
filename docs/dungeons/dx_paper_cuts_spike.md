@@ -324,3 +324,23 @@ committed indexed strips. Tags follow the sf-gt rubric: feeling (**clunky** /
   an absolute indexed load in the same bank).
 - **easy / LOW — the safety check refuses `rm` with a shell-variable path, even inside `find -exec sh -c`.**
   Clear stale bytecode with `find <literal absolute dir> -name '*.pyc' -delete`.
+
+## The giant Mode 7 boss (2026-11-18)
+
+- **surprise / HIGH — a green test can be checking the wrong thing, and only the picture says so.** The Mode 7
+  picture test compared the screen with a reference at "the tick it was shown", so it stayed green while the three
+  "cut" shots had no blade in them: the ROM ticks from boot, so sample *k* was not tick *k*. It was found by
+  looking at the pose sheet, not by a failing assertion. *Fix applied:* the test asserts the ROM is on the tick
+  it asked for. *Fix to make:* a `Machine.tick_of()` or a convention that every score-driven rail exposes its
+  tick at a known offset, so no test has to derive it.
+- **surprise / MEDIUM — no Mode 7 oracle existed in the tree.** The kit has Mode 7 rails (`mode7_chamber`,
+  `m7_dungeon`, ...) but nothing that says what the PPU draws for a given matrix, and the textbook formula is
+  wrong in a way (6 dropped bits, a 10-bit clip, lines from 1) that shows as hundreds of stray pixels and a
+  plausible-looking picture. `render_m7` is now that oracle; it belongs in `vendor/` or `tools/` for every Mode 7 rail.
+- **clunky / MEDIUM — numpy uint8 arithmetic wraps silently.** `tile_number * 64` with a `uint8` tile number
+  overflowed at 256 and produced an empty slice and a reshape error far from the cause. Convert with `int()`
+  at the boundary where a byte becomes an index.
+- **clunky / LOW — `sta dp,y` and `lda f:label,y` do not exist on the 65816.** Two of this rail's first build errors.
+  A one-line note in the assembly style guide would have saved both.
+- **easy / LOW — the creature kit rendered a straight-down crown with no changes**: a depression of 90°, a `bg`
+  size class and a 128×192 box were all a spec edit. 150 distinct tiles for a 113 px rosette.

@@ -1,0 +1,19 @@
+{
+ "class": "bg",
+ "frames": 1,
+ "per_frame": {
+  "idle_0": 141
+ },
+ "unique_tiles_all": 141,
+ "rom_bytes_all": 4512,
+ "max_unique_tiles_one_pose": 141,
+ "chr_budget_tiles": 320,
+ "pose_fits_buffer": true,
+ "new_tiles_per_transition": {
+  "idle_0->idle_0": 0
+ },
+ "worst_transition_tiles": 0,
+ "worst_transition_bytes": 0,
+ "vblank_frames_for_worst": 0,
+ "name": "crownling_boss"
+}

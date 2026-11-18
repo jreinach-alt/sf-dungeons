@@ -27,7 +27,7 @@ LD65    := ld65
 	m7x-assets mode7_explore pfs-assets platformer_stream scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
 	scroller-tb tb-measure tb-picture rate-oracle \
-	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight stomper scroll_run brawler \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant stomper scroll_run brawler \
 	split_h_matrix_demo split_h_persp3_demo \
 	svd-assets split_v_demo svd-nowin split_v_seamtrial \
 	split_h_demo shd-autodemo shp-assets split_h_persp_demo shp-autodemo \
@@ -581,6 +581,54 @@ dgn_fight: $(BUILD)/dgn_fight.sfc
 dgn_fight_naive: $(BUILD)/dgn_fight_naive.sfc
 dgn_fight_hybrid: $(BUILD)/dgn_fight_hybrid.sfc
 dgn_fight_late: $(BUILD)/dgn_fight_late.sfc
+
+# ---- dgn_giant: the GIANT Mode 7 boss (docs/dungeons/20) -
+# The Crownling as ONE still image on the Mode 7 plane, rendered looking straight down, so the PPU's matrix spins,
+# magnifies and slides it for a few register writes a frame. Two OBJ players dodge its three slices. The scene is a
+# score compiled by tools/dgn_giant/director.py. `dgn_giant_plant` swaps the matrix's B and C (the transpose): the
+# planted fault the picture test must catch.
+DGNG      := game/dgn_giant
+DGNG_MAP  := $(BUILD)/dgng
+DGNG_ASM  := $(DGNG)/main.asm $(wildcard $(DGNG)/scenes/*.asm) \
+             $(wildcard engine/features/*/*.asm)
+DGNG_ART  := art/dungeons/creatures/out/crownling_boss/idle_down.png \
+             art/dungeons/creatures/out/crownling_boss/palettes.json \
+             $(wildcard art/dungeons/style/out/a_storybook/*.png) \
+             art/dungeons/style/out/a_storybook/palettes.json \
+             tools/gen_dgn_giant_assets.py tools/gen_dgn_fight_assets.py tools/gen_dgn_hero_assets.py \
+             $(wildcard tools/dgn_giant/*.py) $(wildcard tools/dgn_fight/*.py)
+DGNG_BINS := dgng_m7.bin dgng_hero.bin dgng_pal.bin dgng_score.bin dgng_cmds.bin dgng_ptr.bin dgng_frames.inc
+
+$(DGNG_MAP)/engine_state_globals.inc $(DGNG_MAP)/symbol_map.json: \
+		allocator/substrate.toml allocator/allocate.py allocator/schemas.py \
+		$(wildcard engine/features/*/feature.toml) $(DGNG)/game.toml \
+		$(DGNG)/state.toml | $(BUILD)
+	$(PY) allocator/allocate.py --game $(DGNG) --features-dir engine/features \
+		--out $(DGNG_MAP)
+
+$(addprefix $(BUILD)/assets_giant/,$(DGNG_BINS)): $(DGNG_ART) | $(BUILD)
+	$(PY) tools/gen_dgn_giant_assets.py $(BUILD)/assets_giant
+
+DGNG_CA65 = $(CA65) -I $(DGNG_MAP) -I $(VROM) -I $(DGNG) \
+	-I engine/features/scene_mgr -I engine/features/input -I engine/features/fade \
+	-I engine/features/oam_sprites -I engine/features/dgng_obj -I engine/features/dgng_m7 \
+	-I $(BUILD)/assets_giant --bin-include-dir $(BUILD)/assets_giant
+
+$(BUILD)/dgn_giant.sfc: $(DGNG_ASM) $(DGNG_MAP)/engine_state_globals.inc \
+		$(addprefix $(BUILD)/assets_giant/,$(DGNG_BINS)) \
+		$(VROM)/header.inc $(VROM)/init.inc $(VROM)/ppu_reset.inc $(VROM)/lorom_512k.cfg | $(BUILD)
+	$(PY) allocator/no_literals.py --map $(DGNG_MAP)/symbol_map.json $(DGNG_ASM)
+	$(DGNG_CA65) -o $(BUILD)/dgn_giant.o $(DGNG)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_giant.o
+	$(PY) tools/fix_checksum.py $@
+
+$(BUILD)/dgn_giant_plant.sfc: $(BUILD)/dgn_giant.sfc $(DGNG_ASM)
+	$(DGNG_CA65) -D DGNG_PLANT=1 -o $(BUILD)/dgn_giant_plant.o $(DGNG)/main.asm
+	$(LD65) -C $(VROM)/lorom_512k.cfg -o $@ $(BUILD)/dgn_giant_plant.o
+	$(PY) tools/fix_checksum.py $@
+
+dgn_giant: $(BUILD)/dgn_giant.sfc
+dgn_giant_plant: $(BUILD)/dgn_giant_plant.sfc
 
 # ---- shmup: the vertical shooter ----------------
 # The rail that debuts POOL. Its BG feature (shmup_bg) owns both co-resident
@@ -3546,7 +3594,7 @@ gates: | $(BUILD)
 	run aurora; \
 	run camera_follow; run maze; run jumper; run patrol; \
 	run sprite_game; \
-	run dgn_hero; run dgn_boss; run dgn_fight; \
+	run dgn_hero; run dgn_boss; run dgn_fight; run dgn_giant; \
 	run stomper; \
 	run scroll_run; run split_h_demo; run shd-autodemo; \
 	run brawler; \
@@ -3567,7 +3615,7 @@ gates: | $(BUILD)
 	cat $(BUILD)/gates_summary.txt; \
 	for rom in microzero room breaker shmup platformer split_v_fight m7_dungeon \
 	           split_h_2p_demo mode7_explore platformer_stream hud_game \
-	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight \
+	           scroller lakeside heathaze smelter mill aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant \
 	           stomper scroll_run brawler \
 	           split_h_matrix_demo split_h_persp3_demo split_v_demo \
 	           split_v_seamtrial split_h_demo split_h_persp_demo \
@@ -3742,7 +3790,7 @@ PYTEST_DIST := $(if $(strip $(XDIST)),-n $(strip $(XDIST)) --dist loadfile,)
 # tools/harness_faults.py then says which KIND of red it is (docs/44 section 8).
 test: toy microzero room probes breaker shmup platformer split_v_fight \
 	m7_dungeon split_h_2p_demo sh2-variants mode7_explore platformer_stream \
-	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight \
+	hud_game scroller lakeside heathaze smelter mill mill-direct aurora camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant \
 	stomper \
 	scroll_run brawler split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
@@ -3988,7 +4036,7 @@ MODULE  ?= tests/test_split_h_2p_sprites.py
 FALSIFY ?=
 determinism: split_h_2p_demo sh2-variants microzero hud_game scroller \
 	lakeside heathaze smelter mill mill-direct aurora \
-	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight stomper scroll_run \
+	camera_follow maze jumper patrol sprite_game dgn_hero dgn_boss dgn_fight dgn_giant stomper scroll_run \
 	brawler split_v_fight split_h_matrix_demo split_h_persp3_demo \
 	split_v_demo svd-nowin split_v_seamtrial split_h_demo shd-autodemo \
 	split_h_persp_demo shp-autodemo racer mode7_chamber railshooter rs-probe \

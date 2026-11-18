@@ -1,0 +1,10 @@
+# dgn_giant — SuperForge Dungeons' giant Mode 7 boss (docs/dungeons/20).
+#
+# One scene: the Crownling, a Mode 7 plane wide enough to fill the top of the screen with only part of it ever in
+# view, slides forward and spins and slices at 45, 90 and 135 degrees while two OBJ players dodge, then retracts.
+# `backdrop` is deliberately NOT composed: Mode 7 owns CGRAM word 0.
+globals = ["scene_mgr", "input", "fade", "oam_sprites", "dgng_rom"]
+
+[[scene]]
+id = "giant"
+features = ["dgng_m7", "dgng_obj"]

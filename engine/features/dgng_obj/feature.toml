@@ -1,0 +1,47 @@
+# dgng_obj — the giant boss scene's OBJ layer and SCORE PLAYER (docs/dungeons/20).
+#
+# The boss is a Mode 7 plane (dgng_m7). The two players are OBJs, streamed with the same back-buffer scheme as
+# dgn_fight (docs/dungeons/19): the director prefetches each player's next frame into the off-screen buffer, and
+# OAM names swap to it. Each tick the main thread copies one 33 B record from the score: the four OAM entries,
+# the hi byte, and the Mode 7 shadow for dgng_m7; the NMI hook plays that tick's DMA rows.
+name = "dgng_obj"
+role = "consumer"
+depends = ["oam_sprites", "dgng_rom", "dgng_m7"]
+
+[[claims.hdma]]
+name = "dgngs"
+registers = ["VMDATAL", "VMDATAH"]
+mode = 1
+band = "scene"
+phase = "vblank"
+channels = 1
+
+# THE WORST TICK OF THE SCORE: 256 B in 2 transfers (the director's peak).
+[claims.dma]
+vblank_bytes_per_frame = 256
+vblank_transfers_per_frame = 2
+
+# SIZE MODE 3 (small 16x16 / large 32x32). One OBJ name table of 256 tiles: 4 buffers of 16 tiles are used.
+[[claims.vram]]
+name = "obj_chr"
+kind = "chr"
+obj = true
+words = 4096
+
+[[claims.cgram]]
+name = "obj_pal"
+words = 32
+at = 128
+
+# 0-1 player 1 (top, bottom), 2-3 player 2: one whole hi-table byte
+[[claims.oam]]
+name = "actors"
+sprites = 4
+at = 0
+
+[[claims.reg]]
+name = "obj_obsel"
+registers = ["OBSEL"]
+
+[init]
+zero = []
